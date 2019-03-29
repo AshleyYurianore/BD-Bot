@@ -13,7 +13,6 @@ client.on("ready", () => {
 const startUpMod = {
     'initialize': function (serverName, channelName, startUpMessage) {
         try {
-            client.login(process.env.BOT_TOKEN);
             server = client.guilds.find("name", serverName);
             channel = server.channels.find("name", channelName);
             AsheN = client.users.find("id", "105301872818028544");
@@ -50,3 +49,5 @@ const cmd = {
         }
     }
 };
+
+client.login(process.env.BOT_TOKEN);
