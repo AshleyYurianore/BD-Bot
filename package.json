@@ -1,0 +1,7 @@
+{
+  "name": "BD-Bot",
+  "version": "0.0.1",
+  "dependencies": {
+    "discord.js": "^11.4.2"
+  }
+}
