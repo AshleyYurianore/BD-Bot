@@ -6,6 +6,8 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "discord.js": "^11.4.2"
+    "discord.js": "^11.4.2",
+    "moment": "^2.24.0",
+    "underscore": "^1.9.1"
   }
 }
