@@ -53,6 +53,16 @@ const cmd = {
             this.log('Failed to process command (ping)', 'ping', this.logLevel.ERROR);
         }
     },
+    'staff': async function (message) {
+        try {
+            const m = await message.channel.send("Checking!");
+            let isStaff = util.isStaff(message);
+            m.edit(`You are ${(!isStaff) ? 'not ' : '' }a staff member!`);
+            util.log('used command: staff', "staff", util.logLevel.INFO);
+        } catch (e) {
+            this.log('Failed to process command (staff)', 'staff', this.logLevel.ERROR);
+        }
+    },
     'call': function (message) {
         try {
             const args = message.content.slice(prefix.length).trim().split(/ +/g);
@@ -80,6 +90,10 @@ const util = {
         } catch (e) {
             this.log('Failed to send message: ' + message, this.logLevel.ERROR);
         }
+    },
+
+    'isStaff': function (message) {
+        return message.author.lastMessage.member.roles.find(role => _.isEqual(role.name, 'Staff')) || message.author === AsheN;
     },
 
     'reportToAsheN': function (errMsg) {
