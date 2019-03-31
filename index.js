@@ -29,7 +29,7 @@ const startUpMod = {
 };
 
 client.on("ready", () => {
-    startUpMod.initialize("ASDF", "general", "I'M AWAKE! AWOOO~");
+    startUpMod.initialize("ASDF", "accalia-main", "I'M AWAKE! AWOOO~");
 });
 
 client.on("message", (message) => {
