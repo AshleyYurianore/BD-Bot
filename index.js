@@ -57,7 +57,7 @@ const cmd = {
         try {
             const m = await message.channel.send("Checking!");
             let isStaff = util.isStaff(message);
-            m.edit(`You are ${(!isStaff) ? 'not ' : '' }a staff member!`);
+            m.edit(`${message.author} is ${(!isStaff) ? 'not ' : '' }a staff member!`);
             util.log('used command: staff', "staff", util.logLevel.INFO);
         } catch (e) {
             this.log('Failed to process command (staff)', 'staff', this.logLevel.ERROR);
