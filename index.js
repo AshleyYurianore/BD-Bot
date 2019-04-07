@@ -16,7 +16,7 @@ const db_pw = (_.isUndefined(localConfig)) ? process.env.DB_PW : localConfig.DB.
 const url = `mongodb://${db_user}:${db_pw}@ds1${db_port}.mlab.com:${db_port}/${db_name}`;
 
 const prefix = _.isUndefined(localConfig) ? process.env.PREFIX : localConfig.PREFIX;
-let server = "534775766693576705";
+let server = _.isUndefined(localConfig) ? process.env.SERVER_ID : localConfig.SERVER;
 let channels = {
     'main': "accalia-main",
     'logs': "accalia-logs",
