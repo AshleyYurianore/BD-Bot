@@ -227,9 +227,9 @@ const cmd = {
 
             dbMod.warnUser(member, level, message.author, reason);
             let expirationMsg = [
-                ` in 2 weeks.`,
-                ` in 1 month.`,
-                ` whenever the staff team decides for it.`
+                `in 2 weeks.`,
+                `in 1 month.`,
+                `whenever the staff team decides for it.`
             ];
             member.user.send(`You have been given a Level ${level} warning in the server **${server.name}** with reason: '${reason}'\n`+
                 `This warning expires ${expirationMsg[level-1]}`);
