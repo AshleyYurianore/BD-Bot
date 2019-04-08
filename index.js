@@ -24,10 +24,11 @@ let channels = {
 };
 let AsheN;
 let lockdown = false;
+let disableMentions = false;
 
 
 const dbMod = {
-    'warnUser': function (member, level, reason) {
+    'warnUser': function (member, level, warner, reason) {
         try {
             this.connect( function(db) {
                 let warnings = db.collection('warnings');
@@ -48,10 +49,18 @@ const dbMod = {
                 )
                     .then(() => {
                         util.log(`Successfully added/updated warning for ${member} (lvl ${level})`, 'DB/warnUser', util.logLevel.INFO);
+                        let dateFormat = 'Do MMMM YYYY';
+                        let warnDate = [
+                            moment(new Date(Date.now() + 1000 * 60 * 60 * 24 * 14)).format(dateFormat) + " (14 Days)",
+                            moment(new Date(Date.now() + 1000 * 60 * 60 * 24 * 30)).format(dateFormat) + " (30 Days)",
+                            'indefinite'
+                        ];
+                        let lvlMsg = ['1st Warning', '2nd Warning', '3rd Warning'];
                         util.sendTextMessage(channels.warnings,
-                            `${member} | **Lvl ${level}**\n`+
-                            `__Reason:__ ${reason}\n` +
-                            `__When:__ ${moment().format('MMM DD YYYY - HH:mm:ss.SSS [GMT]Z')}\n`+
+                            `${member} | **${lvlMsg[level-1]}**\n`+
+                            `__Reason:__ ${!_.isEmpty(reason) ? reason : 'Not specified'} (Warned by ${warner})\n` +
+                            `__When:__ ${moment().format(dateFormat)}\n`+
+                            `__Ends:__ ${warnDate[level-1]}\n`+
                             `-------------------`
                         );
                     })
@@ -76,14 +85,14 @@ const dbMod = {
 };
 
 const startUpMod = {
-    'initialize': function (startUpMessage) {
+    'initialize': async function (startUpMessage) {
         try {
             if (!_.isUndefined(localConfig)) server = localConfig.SERVER;
-            server = client.guilds.find(guild => _.isEqual(guild.id, server));
-            _.each(channels, function (channel, channelID) {
-                channels[channelID] = server.channels.find(ch => _.isEqual(ch.name, channels[channelID]));
+            server = await client.guilds.find(guild => _.isEqual(guild.id, server));
+            _.each(channels, async function (channel, channelID) {
+                channels[channelID] = await server.channels.find(ch => _.isEqual(ch.name, channels[channelID]));
             });
-            AsheN = client.users.find(user => _.isEqual(user.id, 105301872818028544));
+            AsheN = await server.members.find(guildMember => _.isEqual(guildMember.user.id, "105301872818028544")).user;
             client.user.setActivity("Serving the Den").catch(util.reportToAsheN);
             util.sendTextMessage(channels.main, startUpMessage);
             util.log("INITIALIZED.", "Startup", util.logLevel.INFO);
@@ -92,7 +101,7 @@ const startUpMod = {
             this.testschedule();
 
         } catch (e) {
-            if (!_.isUndefined(localConfig)) console.log("(" + moment().format('MMM DD YYYY - HH:mm:ss.SSS') + ") Failed to start up.");
+            if (!_.isUndefined(localConfig)) console.log(`(${moment().format('MMM DD YYYY - HH:mm:ss.SSS')}) Failed to start up.`);
         }
     },
     'testschedule': function () {
@@ -112,9 +121,12 @@ client.on("message", (message) => {
 
     if (message.isMentioned(client.user)) {
         const args = message.content.trim().split(/ +/g).splice(1);
-        util.log(message.content, 'mentioned', util.logLevel.INFO);
+        util.log(message.content, `mentioned by (${message.author})`, util.logLevel.INFO);
+
+        if (disableMentions && !util.isStaff(message)) return;
+
         if (args.length === 0) {
-            util.sendTextMessage(message.channel, `${message.author}, How may I be of service?`);
+            util.sendTextMessage(message.channel, `Awoo!`);
         } else {
             switch (args[0]) {
                 case "prefix": {
@@ -148,7 +160,7 @@ const cmd = {
             m.edit(`Pong! Latency is ${m.createdTimestamp - message.createdTimestamp}ms. API Latency is ${Math.round(client.ping)}ms`);
             util.log('used command: ping', "ping", util.logLevel.INFO);
         } catch (e) {
-            this.log('Failed to process command (ping)', 'ping', util.logLevel.ERROR);
+            util.log('Failed to process command (ping)', 'ping', util.logLevel.ERROR);
         }
     },
     'staff': async function (message) {
@@ -158,7 +170,7 @@ const cmd = {
             m.edit(`${message.author} is${(!isStaff) ? ' not' : '' } a staff member!`);
             util.log('used command: staff', "staff", util.logLevel.INFO);
         } catch (e) {
-            this.log('Failed to process command (staff)', 'staff', util.logLevel.ERROR);
+            util.log('Failed to process command (staff)', 'staff', util.logLevel.ERROR);
         }
     },
     'warn': async function (message, args) {
@@ -183,17 +195,14 @@ const cmd = {
             let hasWarn2 = member.roles.find(role => _.isEqual(role.name, util.roles.WARN_2));
             let level;
             let reason = message.content.substring(message.content.indexOf(args[0]) + args[0].length + 1);
-            let warnMsg = `${message.author} has warned ${member}${(reason) ? ' Reason: "' + reason + '"' : ''}`;
             let err = false;
 
             // Warn functionality
             if (hasWarn2) {
-                await util.sendTextMessage(message.channel, `${warnMsg}, This is the **3rd warning** and would lead to a __ban__ from the server. Any last words? :v`);
                 level = 3;
             } else if (hasWarn1) {
                 await member.addRole(warnRole2)
                     .then(() => {
-                        util.sendTextMessage(message.channel, `${warnMsg} This is the **2nd warning**.`);
                         member.removeRole(warnRole1)
                             .catch(() => {
                                 util.log(`Failed to remove Warning level 1 from ${member}.`, 'Warn: remove level 1', util.logLevel.ERROR);
@@ -207,10 +216,7 @@ const cmd = {
                     });
             } else {
                 await member.addRole(warnRole1)
-                    .then(() => {
-                        util.sendTextMessage(message.channel, warnMsg);
-                        level = 1;
-                    })
+                    .then(() => { level = 1 })
                     .catch(() => {
                         err = true;
                         util.log(`Failed to add Warning level 1 to ${member}.`, 'Warn: 0->1', util.logLevel.ERROR);
@@ -219,7 +225,7 @@ const cmd = {
 
             if (err) return;
 
-            dbMod.warnUser(member, level, reason);
+            dbMod.warnUser(member, level, message.author, reason);
             let expirationMsg = [
                 ` in 2 weeks.`,
                 ` in 1 month.`,
@@ -228,20 +234,41 @@ const cmd = {
             member.user.send(`You have been given a Level ${level} warning in the server **${server.name}** with reason: '${reason}'\n`+
                 `This warning expires ${expirationMsg[level-1]}`);
             util.log(`warned: ${member} (${level-1}->${level})`, "warn", util.logLevel.INFO);
+            message.delete();
         } catch (e) {
-            this.log('Failed to process command (warn)', 'warn', util.logLevel.ERROR);
+            util.log('Failed to process command (warn)', 'warn', util.logLevel.ERROR);
+        }
+    },
+    'stopmention': function (message) {
+        if (util.isStaff(message)) {
+            disableMentions = true;
+            util.sendTextMessage(message.channel, 'No longer listening to non-staff mentions... :(');
+            util.log('Disabling responses to non-staff mentions ...', 'disable mentions', util.logLevel.INFO);
+        }
+    },
+    'startmention': function (message) {
+        if (util.isStaff(message)) {
+            disableMentions = false;
+            util.sendTextMessage(message.channel, 'Start listening to non-staff mentions... :3');
+            util.log('Enabling responses to non-staff mentions', 'enable mentions', util.logLevel.INFO);
+        }
+    },
+    'quit': function (message) {
+        if (message.author === AsheN) {
+            lockdown = true;
+            util.log('Locking down...', 'quit', util.logLevel.FATAL);
         }
     },
     'call': async function (message) {
+        const args = message.content.slice(prefix.length).trim().split(/ +/g);
+        const command = args.shift().toLowerCase();
         try {
-            const args = message.content.slice(prefix.length).trim().split(/ +/g);
-            const command = args.shift().toLowerCase();
             if (_.isEqual(command, "call")) return;
             if (_.isUndefined(this[command])) return;
             await this[command](message, args);
             util.log(message.author.username + ' is calling command: ' + command, command, util.logLevel.INFO);
         } catch (e) {
-            this.log('Failed to process (call)', 'call', util.logLevel.ERROR);
+            util.log(`Failed to process (${command})`, command, util.logLevel.ERROR);
         }
     },
 };
@@ -302,15 +329,8 @@ const util = {
     'logLevel': {
         'INFO':  "INFO ",
         'WARN':  "WARN ",
-        'ERROR': "ERROR",
-        'FATAL': "FATAL",
-    },
-
-    'quit': function (message) {
-        if (message.author === AsheN) {
-            lockdown = true;
-            this.log('Locking down...', 'quit', this.logLevel.FATAL);
-        }
+        'ERROR': "**ERROR**",
+        'FATAL': "__**FATAL**__",
     }
 };
 
