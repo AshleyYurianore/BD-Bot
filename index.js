@@ -218,7 +218,7 @@ const cmd = {
 
             if (err) return;
 
-            dbMod.warnUser(member, level, reason);
+           // dbMod.warnUser(member, level, reason);
 
             util.log(`warned: ${member} (${level}->${level+1})`, "warn", util.logLevel.INFO);
         } catch (e) {
