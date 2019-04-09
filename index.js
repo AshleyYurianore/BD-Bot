@@ -225,7 +225,7 @@ const cmd = {
 
             if (err) return;
 
-            // dbMod.warnUser(member, level, message.author, reason);
+            dbMod.warnUser(member, level, message.author, reason);
             let expirationMsg = [
                 `in 2 weeks.`,
                 `in 1 month.`,
