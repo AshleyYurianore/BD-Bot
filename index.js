@@ -29,8 +29,11 @@ let disableMentions = false;
 
 const dbMod = {
     'warnUser': function (member, level, warner, reason) {
+        util.log(`TEST 1 ${member} (lvl ${level})`, 'DB/warnUser', util.logLevel.INFO);
         try {
+            util.log(`TEST 2 ${member} (lvl ${level})`, 'DB/warnUser', util.logLevel.INFO);
             this.connect( function(db) {
+                util.log(`TEST 3 ${member} (lvl ${level})`, 'DB/warnUser', util.logLevel.INFO);
                 let warnings = db.collection('warnings');
                 let warnedUser = {
                     id: member.user.id,
@@ -41,6 +44,7 @@ const dbMod = {
                     warnedAt: new Date(Date.now())
                 };
 
+                util.log(`TEST 4 ${member} (lvl ${level})`, 'DB/warnUser', util.logLevel.INFO);
                 // Upsert command
                 warnings.findOneAndUpdate(
                     { id: member.user.id },
