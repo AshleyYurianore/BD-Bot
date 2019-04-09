@@ -121,6 +121,8 @@ client.on("ready", () => {
 
 client.on("message", (message) => {
     if (_.isEqual(message.author.username, client.user.username)) return;
+    if (message.author.bot) return;
+    if (!message.channel.guild) return;
     if (lockdown) return;
 
     if (message.isMentioned(client.user)) {
