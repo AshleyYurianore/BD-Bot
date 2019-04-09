@@ -79,11 +79,14 @@ const startUpMod = {
     'initialize': function (startUpMessage) {
         try {
             if (!_.isUndefined(localConfig)) server = localConfig.SERVER;
-            server = client.guilds.find(guild => _.isEqual(guild.id, server));
+            client.guilds.find(guild => _.isEqual(guild.id, server))
+                .then(srv => {
+                    server = srv;
+                    AsheN = server.members.find(guildMember => _.isEqual(guildMember.user.id, 105301872818028544)).user;
+                });
             _.each(channels, function (channel, channelID) {
                 channels[channelID] = server.channels.find(ch => _.isEqual(ch.name, channels[channelID]));
             });
-            AsheN = client.users.find(user => _.isEqual(user.id, 105301872818028544));
             client.user.setActivity("Serving the Den").catch(util.reportToAsheN);
             util.sendTextMessage(channels.main, startUpMessage);
             util.log("INITIALIZED.", "Startup", util.logLevel.INFO);
@@ -148,7 +151,7 @@ const cmd = {
             m.edit(`Pong! Latency is ${m.createdTimestamp - message.createdTimestamp}ms. API Latency is ${Math.round(client.ping)}ms`);
             util.log('used command: ping', "ping", util.logLevel.INFO);
         } catch (e) {
-            this.log('Failed to process command (ping)', 'ping', util.logLevel.ERROR);
+            util.log('Failed to process command (ping)', 'ping', util.logLevel.ERROR);
         }
     },
     'staff': async function (message) {
@@ -158,7 +161,7 @@ const cmd = {
             m.edit(`${message.author} is${(!isStaff) ? ' not' : '' } a staff member!`);
             util.log('used command: staff', "staff", util.logLevel.INFO);
         } catch (e) {
-            this.log('Failed to process command (staff)', 'staff', util.logLevel.ERROR);
+            util.log('Failed to process command (staff)', 'staff', util.logLevel.ERROR);
         }
     },
     'warn': async function (message, args) {
@@ -229,7 +232,7 @@ const cmd = {
                 `This warning expires ${expirationMsg[level-1]}`);
             util.log(`warned: ${member} (${level-1}->${level})`, "warn", util.logLevel.INFO);
         } catch (e) {
-            this.log('Failed to process command (warn)', 'warn', util.logLevel.ERROR);
+            util.log('Failed to process command (warn)', 'warn', util.logLevel.ERROR);
         }
     },
     'call': async function (message) {
@@ -241,7 +244,7 @@ const cmd = {
             await this[command](message, args);
             util.log(message.author.username + ' is calling command: ' + command, command, util.logLevel.INFO);
         } catch (e) {
-            this.log('Failed to process (call)', 'call', util.logLevel.ERROR);
+            util.log('Failed to process (call)', 'call', util.logLevel.ERROR);
         }
     },
 };
