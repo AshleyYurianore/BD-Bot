@@ -85,14 +85,14 @@ const dbMod = {
 };
 
 const startUpMod = {
-    'initialize': async function (startUpMessage) {
+    'initialize': function (startUpMessage) {
         try {
             if (!_.isUndefined(localConfig)) server = localConfig.SERVER;
-            server = await client.guilds.find(guild => _.isEqual(guild.id, server));
-            _.each(channels, async function (channel, channelID) {
-                channels[channelID] = await server.channels.find(ch => _.isEqual(ch.name, channels[channelID]));
+            server = client.guilds.find(guild => _.isEqual(guild.id, server));
+            _.each(channels, function (channel, channelID) {
+                channels[channelID] = server.channels.find(ch => _.isEqual(ch.name, channels[channelID]));
             });
-            AsheN = await client.users.find(user => _.isEqual(user.id, "105301872818028544"));
+            AsheN = client.users.find(user => _.isEqual(user.id, "105301872818028544"));
             client.user.setActivity("Serving the Den").catch(util.reportToAsheN);
             util.sendTextMessage(channels.main, startUpMessage);
             util.log("INITIALIZED.", "Startup", util.logLevel.INFO);
