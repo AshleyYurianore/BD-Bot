@@ -92,7 +92,7 @@ const startUpMod = {
             _.each(channels, async function (channel, channelID) {
                 channels[channelID] = await server.channels.find(ch => _.isEqual(ch.name, channels[channelID]));
             });
-            AsheN = await server.members.find(guildMember => _.isEqual(guildMember.user.id, "105301872818028544")).user;
+            AsheN = await client.users.find(user => _.isEqual(user.id, "105301872818028544"));
             client.user.setActivity("Serving the Den").catch(util.reportToAsheN);
             util.sendTextMessage(channels.main, startUpMessage);
             util.log("INITIALIZED.", "Startup", util.logLevel.INFO);
@@ -225,7 +225,7 @@ const cmd = {
 
             if (err) return;
 
-            dbMod.warnUser(member, level, message.author, reason);
+            // dbMod.warnUser(member, level, message.author, reason);
             let expirationMsg = [
                 `in 2 weeks.`,
                 `in 1 month.`,
