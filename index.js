@@ -35,7 +35,7 @@ const dbMod = {
                     id: member.user.id,
                     currName: member.user.username,
                     formerName: member.user.username,
-                    level: level,
+                    level: ++level,
                     reason: reason,
                     warnedAt: new Date(Date.now())
                 };
@@ -182,14 +182,14 @@ const cmd = {
             let hasWarn1 = member.roles.find(role => _.isEqual(role.name, util.roles.WARN_1));
             let hasWarn2 = member.roles.find(role => _.isEqual(role.name, util.roles.WARN_2));
             let level;
-            let reason = message.content.substring(message.content.indexOf(args[0]) + args[0].length + 1);
+            let reason = message.content.substring(message.content.indexOf(args[0]) + args[0].length);
             let warnMsg = `${message.author} has warned ${member}${(reason) ? ' Reason: "' + reason + '"' : ''}`;
             let err = false;
 
             // Warn functionality
             if (hasWarn2) {
                 await util.sendTextMessage(message.channel, `${warnMsg}, This is the **3rd warning** and would lead to a __ban__ from the server. Any last words? :v`);
-                level = 3;
+                level = 2;
             } else if (hasWarn1) {
                 await member.addRole(warnRole2)
                     .then(() => {
@@ -199,17 +199,16 @@ const cmd = {
                                 util.log(`Failed to remove Warning level 1 from ${member}.`, 'Warn: remove level 1', util.logLevel.ERROR);
                                 err = true;
                             });
-                        level = 2;
+                        level = 1;
                     })
                     .catch(() => {
-                        err = true;
                         util.log(`Failed to add Warning level 2 to ${member}.`, 'Warn: 1->2', util.logLevel.ERROR);
                     });
             } else {
                 await member.addRole(warnRole1)
                     .then(() => {
                         util.sendTextMessage(message.channel, warnMsg);
-                        level = 1;
+                        level = 0;
                     })
                     .catch(() => {
                         err = true;
@@ -220,14 +219,8 @@ const cmd = {
             if (err) return;
 
             dbMod.warnUser(member, level, reason);
-            let expirationMsg = [
-                ` in 2 weeks.`,
-                ` in 1 month.`,
-                ` whenever the staff team decides for it.`
-            ];
-            member.user.send(`You have been given a Level ${level} warning in the server **${server.name}** with reason: '${reason}'\n`+
-                `This warning expires ${expirationMsg[level-1]}`);
-            util.log(`warned: ${member} (${level-1}->${level})`, "warn", util.logLevel.INFO);
+
+            util.log(`warned: ${member} (${level}->${level+1})`, "warn", util.logLevel.INFO);
         } catch (e) {
             util.log('Failed to process command (warn)', 'warn', util.logLevel.ERROR);
         }
