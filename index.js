@@ -29,11 +29,11 @@ let disableMentions = false;
 
 const dbMod = {
     'warnUser': function (member, level, warner, reason) {
-        util.log(`TEST 1 ${member} (lvl ${level})`, 'DB/warnUser', util.logLevel.INFO);
+        util.log(`Calling DB Module`, 'DB/warnUser', util.logLevel.INFO);
         try {
-            util.log(`TEST 2 ${member} (lvl ${level})`, 'DB/warnUser', util.logLevel.INFO);
+            util.log(`Attempting to connect to DB`, 'DB/warnUser', util.logLevel.INFO);
             this.connect( function(db) {
-                util.log(`TEST 3 ${member} (lvl ${level})`, 'DB/warnUser', util.logLevel.INFO);
+                util.log(`Successfully established DB Connection`, 'DB/warnUser', util.logLevel.INFO);
                 let warnings = db.collection('warnings');
                 let warnedUser = {
                     id: member.user.id,
@@ -44,7 +44,17 @@ const dbMod = {
                     warnedAt: new Date(Date.now())
                 };
 
-                util.log(`TEST 4 ${member} (lvl ${level})`, 'DB/warnUser', util.logLevel.INFO);
+                warnings.findOne({ id: member.user.id })
+                    .then(userFound => {
+                        warnedUser.formerName = userFound.formerName;
+                        level = userFound.level+1;
+                        // TODO: REPLACE FORMERNAME AND LEVEL IF EXISTS IN DB --> PREREQUISITE: SCHEDULED WARNING DELETION
+                    })
+                    .catch(err => {
+                        util.log(`Failed to do command warning (findOneAndUpdate): ${err}.`, 'DB/warnUser', util.logLevel.FATAL);
+                    });
+
+                util.log(`Attempting updating/inserting warning for ${member}`, 'DB/warnUser', util.logLevel.INFO);
                 // Upsert command
                 warnings.findOneAndUpdate(
                     { id: member.user.id },
@@ -60,6 +70,17 @@ const dbMod = {
                             'indefinite'
                         ];
                         let lvlMsg = ['1st Warning', '2nd Warning', '3rd Warning'];
+                        let expirationMsg = [
+                            `in 2 weeks.`,
+                            `in 1 month.`,
+                            `whenever the staff team decides for it.`
+                        ];
+
+                        member.user.send(`You have been given a Level ${level} warning in the server **${server.name}** with reason: '${reason}'\n`+
+                            `This warning expires ${expirationMsg[level-1]}`);
+
+                        util.log(`warned: ${member} (${level-1}->${level})`, "warn", util.logLevel.INFO);
+
                         util.sendTextMessage(channels.warnings,
                             `${member} | **${lvlMsg[level-1]}**\n`+
                             `__Reason:__ ${!_.isEmpty(reason) ? reason : 'Not specified'} (Warned by ${warner})\n` +
@@ -231,15 +252,7 @@ const cmd = {
 
             if (err) return;
 
-            dbMod.warnUser(member, level, message.author, reason);
-            let expirationMsg = [
-                `in 2 weeks.`,
-                `in 1 month.`,
-                `whenever the staff team decides for it.`
-            ];
-            member.user.send(`You have been given a Level ${level} warning in the server **${server.name}** with reason: '${reason}'\n`+
-                `This warning expires ${expirationMsg[level-1]}`);
-            util.log(`warned: ${member} (${level-1}->${level})`, "warn", util.logLevel.INFO);
+            await dbMod.warnUser(member, level, message.author, reason);
             message.delete();
         } catch (e) {
             util.log('Failed to process command (warn)', 'warn', util.logLevel.ERROR);
