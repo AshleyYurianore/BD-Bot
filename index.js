@@ -20,11 +20,11 @@ let server = _.isUndefined(localConfig) ? process.env.SERVER_ID : localConfig.SE
 let channels = {
     'main': "accalia-main",
     'logs': "accalia-logs",
-    'warnings': "warnings",
+    'warnings': "🚨warnings",
 };
 let AsheN;
 let lockdown = false;
-let disableMentions = false;
+let disableMentions = true;
 
 
 const dbMod = {
@@ -323,6 +323,8 @@ const util = {
         'LVL_20': "Slut (Lvl 20+)",
         'LVL_30': "Whore (Lvl 30+)",
         'LVL_40': "Cumdump (Lvl 40+)",
+        'LVL_50': "Pormstar (Lvl 50+)",
+        'LVL_60': "Sex-Toy (Lvl 60+)",
     },
 
     'reportToAsheN': function (errMsg) {
