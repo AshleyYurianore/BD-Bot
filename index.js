@@ -46,6 +46,7 @@ const dbMod = {
 
                 warnings.findOne({ id: member.user.id })
                     .then(userFound => {
+                        if (userFound == null) return;
                         warnedUser.formerName = userFound.formerName;
                         level = userFound.level+1;
                         // TODO: REPLACE FORMERNAME AND LEVEL IF EXISTS IN DB --> PREREQUISITE: SCHEDULED WARNING DELETION
