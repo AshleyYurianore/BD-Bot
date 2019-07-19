@@ -170,42 +170,47 @@ client.on("message", (message) => {
                     break;
                 }
             }
-        }
-    } else if (_.isEqual(message.author.id, "159985870458322944") && _.isEqual(message.channel.name, "📈level-up-log")) {
+        } // _.isEqual(message.author.id, "159985870458322944") &&
+    } else if (_.isEqual(message.channel.name, "📈level-up-log")) {
         let lvlString = "has reached **level ";
         let lvlStringPos = message.content.indexOf(lvlString);
         message.mentions.users.forEach(function (user, id) {
             if (lvlStringPos > 0) {
+                let usr = message.guild.members.get(id);
                 let level = parseInt(message.content.substr(lvlStringPos + lvlString.length, 2));
                 let lvlRoleAdd;
                 let lvlRoleRemove;
 
-                if (level < 5) {
-                    lvlRoleAdd = util.roles.LVL_0;
-                } else if (level < 10) {
+                if (level === 5) {
+                    user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 5` in the Breeding Den Server and now you're able to join Voice Channels if you want to!" +
+                        "\n\n(_P.S. I'm a bot, so please don't reply!_)");
                     lvlRoleAdd = util.roles.LVL_5;
                     lvlRoleRemove = util.roles.LVL_0;
-                } else if (level < 20) {
+                } else if (level === 10) {
                     lvlRoleAdd = util.roles.LVL_10;
                     lvlRoleRemove = util.roles.LVL_5;
-                } else if (level < 30) {
+                } else if (level === 20) {
+                    user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 20` in the Breeding Den Server and now you're able to create your own cult, as long as certain criterias are met too!" +
+                        "For more detailed information, please check out the very top message in <#538901164897337347>" +
+                        "\nIf you're interested, simply ask a Staff member and they will guide you through the process!\n\n(_P.S. I'm a bot, so please don't reply!_)");
                     lvlRoleAdd = util.roles.LVL_20;
                     lvlRoleRemove = util.roles.LVL_10;
-                } else if (level < 40) {
+                } else if (level === 30) {
+                    user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 30` in the Breeding Den Server and now you're able to get yourself a __Custom Role__ if you want to!" +
+                        "\nSimply ask a Staff member and tell them the __Name__ and __Color__ (ideally in Hexcode) of the Custom role!\n\n(_P.S. I'm a bot, so please don't reply!_)");
                     lvlRoleAdd = util.roles.LVL_30;
                     lvlRoleRemove = util.roles.LVL_20;
-                } else if (level < 50) {
+                } else if (level === 40) {
                     lvlRoleAdd = util.roles.LVL_40;
                     lvlRoleRemove = util.roles.LVL_30;
-                } else if (level < 60) {
+                } else if (level === 50) {
                     lvlRoleAdd = util.roles.LVL_50;
                     lvlRoleRemove = util.roles.LVL_40;
-                } else if (level < 70) {
+                } else if (level === 60) {
                     lvlRoleAdd = util.roles.LVL_60;
                     lvlRoleRemove = util.roles.LVL_50;
                 }
 
-                let usr = message.guild.members.get(id);
                 usr.addRole(server.roles.find(role => _.isEqual(role.name, lvlRoleAdd))).then(() => {
                     message.react('✅').then();
                     if (lvlRoleRemove !== undefined) {
