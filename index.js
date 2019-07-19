@@ -190,7 +190,8 @@ client.on("message", (message) => {
                     lvlRoleAdd = util.roles.LVL_10;
                     lvlRoleRemove = util.roles.LVL_5;
                 } else if (level === 20) {
-                    user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 20` in the Breeding Den Server and now you're able to create your own cult, as long as certain criterias are met too!" +
+                    user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 20` in the Breeding Den Server and now you've unlocked the <#560869811157073920> " +
+                        "and you're able to create your own cult, as long as certain criterias are met too!" +
                         "For more detailed information, please check out the very top message in <#538901164897337347>" +
                         "\nIf you're interested, simply ask a Staff member and they will guide you through the process!\n\n(_P.S. I'm a bot, so please don't reply!_)");
                     lvlRoleAdd = util.roles.LVL_20;
