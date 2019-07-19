@@ -143,7 +143,7 @@ client.on("ready", () => {
 
 client.on("message", (message) => {
     if (_.isEqual(message.author.username, client.user.username)) return;
-    if (message.author.bot) return;
+    if (message.author.bot && !(_.isEqual(message.author.id, "159985870458322944") && _.isEqual(message.channel.name, "📈level-up-log"))) return;
     if (!message.channel.guild) return;
     if (lockdown) return;
 
@@ -171,6 +171,51 @@ client.on("message", (message) => {
                 }
             }
         }
+    } else if (_.isEqual(message.author.id, "159985870458322944") && _.isEqual(message.channel.name, "📈level-up-log")) {
+        let lvlString = "has reached **level ";
+        let lvlStringPos = message.content.indexOf(lvlString);
+        message.mentions.users.forEach(function (user, id) {
+            if (lvlStringPos > 0) {
+                let level = parseInt(message.content.substr(lvlStringPos + lvlString.length, 2));
+                let lvlRoleAdd;
+                let lvlRoleRemove;
+
+                if (level < 5) {
+                    lvlRoleAdd = util.roles.LVL_0;
+                } else if (level < 10) {
+                    lvlRoleAdd = util.roles.LVL_5;
+                    lvlRoleRemove = util.roles.LVL_0;
+                } else if (level < 20) {
+                    lvlRoleAdd = util.roles.LVL_10;
+                    lvlRoleRemove = util.roles.LVL_5;
+                } else if (level < 30) {
+                    lvlRoleAdd = util.roles.LVL_20;
+                    lvlRoleRemove = util.roles.LVL_10;
+                } else if (level < 40) {
+                    lvlRoleAdd = util.roles.LVL_30;
+                    lvlRoleRemove = util.roles.LVL_20;
+                } else if (level < 50) {
+                    lvlRoleAdd = util.roles.LVL_40;
+                    lvlRoleRemove = util.roles.LVL_30;
+                } else if (level < 60) {
+                    lvlRoleAdd = util.roles.LVL_50;
+                    lvlRoleRemove = util.roles.LVL_40;
+                } else if (level < 70) {
+                    lvlRoleAdd = util.roles.LVL_60;
+                    lvlRoleRemove = util.roles.LVL_50;
+                }
+
+                let usr = message.guild.members.get(id);
+                usr.addRole(server.roles.find(role => _.isEqual(role.name, lvlRoleAdd))).then(() => {
+                    message.react('✅').then();
+                    if (lvlRoleRemove !== undefined) {
+                        try {
+                            usr.removeRole(server.roles.find(role => _.isEqual(role.name, lvlRoleRemove))).then();
+                        } catch (e) { }
+                    }
+                });
+            }
+        });
     }
 
     // Prefix as first character -> command
@@ -178,7 +223,6 @@ client.on("message", (message) => {
         cmd.call(message);
         return;
     }
-    console.log();
 });
 
 const cmd = {
