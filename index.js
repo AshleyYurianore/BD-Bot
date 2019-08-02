@@ -410,9 +410,11 @@ const fnct = {
                 default:
                     break;
             }
-            server.channels.find(ch => _.isEqual(ch.id, channel)).setName(str);
+            server.channels.find(ch => _.isEqual(ch.id, channel)).setName(str).then(() => {
+                util.log('Successfully updated server stats! (' + mode + ')', 'Server Stats', this.logLevel.INFO);
+            });
         } catch (e) {
-            this.log('Failed to update server stats: ' + mode, this.logLevel.ERROR);
+            util.log('Failed to update server stats: ' + mode, 'Server Stats', this.logLevel.ERROR);
         }
     }
 };
