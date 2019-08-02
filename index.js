@@ -123,6 +123,14 @@ const startUpMod = {
             util.sendTextMessage(channels.main, startUpMessage);
             util.log("INITIALIZED.", "Startup", util.logLevel.INFO);
 
+            fnct.serverStats('users');
+            fnct.serverStats('online');
+            fnct.serverStats('new');
+            fnct.serverStats('bots');
+            fnct.serverStats('roles');
+            fnct.serverStats('channels');
+            fnct.serverStats('age');
+
             return;
             this.testschedule();
 
@@ -139,6 +147,28 @@ const startUpMod = {
 
 client.on("ready", () => {
     startUpMod.initialize("I'M AWAKE! AWOOO~");
+});
+
+client.on("guildMemberAdd", (member) => {
+    fnct.serverStats('users');
+    fnct.serverStats('online');
+    fnct.serverStats('new');
+});
+
+client.on("guildMemberRemove", (member) => {
+    fnct.serverStats('users');
+    fnct.serverStats('online');
+    fnct.serverStats('new');
+});
+
+client.on("guildUpdate", (oldGuild, newGuild) => {
+    fnct.serverStats('users');
+    fnct.serverStats('online');
+    fnct.serverStats('new');
+    fnct.serverStats('bots');
+    fnct.serverStats('roles');
+    fnct.serverStats('channels');
+    fnct.serverStats('age');
 });
 
 client.on("message", (message) => {
@@ -341,6 +371,50 @@ const cmd = {
             util.log(`Failed to process (${command})`, command, util.logLevel.ERROR);
         }
     },
+};
+
+const fnct = {
+    'serverStats': function (mode) {
+        try {
+            let channel = "";
+            let str = "";
+            switch (mode) {
+                case 'users':
+                    channel = "582321301142896652";
+                    str = "📊User Count: " + server.members.filter(member => !member.user.bot).size;
+                    break;
+                case 'online':
+                    channel = "582321302837133313";
+                    str = "📊Online users: " + server.members.filter(member => !member.user.bot && !_.isEqual(member.user.presence.status, "offline")).size;
+                    break;
+                case 'new':
+                    channel = "582309343274205209";
+                    str = "📈New users: " + server.members.filter(member => !member.user.bot && ((new Date() - member.joinedAt) / 1000 / 60 / 60 / 24) <= 1).size;
+                    break;
+                case 'bots':
+                    channel = "582309344608124941";
+                    str = "🤖Bot Count: " + server.members.filter(member => member.user.bot).size;
+                    break;
+                case 'roles':
+                    channel = "606773795142893568";
+                    str = "🎲Roles: " + server.roles.size;
+                    break;
+                case 'channels':
+                    channel = "606773807306506240";
+                    str = "📇Channels: " + server.channels.size;
+                    break;
+                case 'age':
+                    channel = "606773822284365874";
+                    str = "📅Age: " + Math.floor((new Date() - server.createdAt) / 1000 / 60 / 60 / 24) + " days";
+                    break;
+                default:
+                    break;
+            }
+            server.channels.find(ch => _.isEqual(ch.id, channel)).setName(str);
+        } catch (e) {
+            this.log('Failed to update server stats: ' + mode, this.logLevel.ERROR);
+        }
+    }
 };
 
 const util = {
