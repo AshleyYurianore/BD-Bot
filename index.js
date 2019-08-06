@@ -452,12 +452,15 @@ const fnct = {
             if (_.isEqual(message.channel.name, "📃character-submission") && _.isEqual(reaction.name, "✅") && util.isUserStaff(user)) {
                 util.log(message.channel + reaction.name + user, `debug`, util.logLevel.INFO);
                 let msgAttachments = message.attachments.map(a => a.url);
-                const embed = new DiscordJS.RichEmbed()
+                let embed = new DiscordJS.RichEmbed()
                     .setColor(0x00AE86)
                     .setDescription(message.author.username + " (" + message.author.id + ")") 
                     .addField("Charname", message.content)
-                    .addField("Attachments", msgAttachments.length > 0 ? msgAttachments : "N/A");
-                ;
+                    .addField("Attachments", msgAttachments.length > 0 ? msgAttachments : "N/A")
+                ;  
+                if (msgAttachments.length > 0) {
+                    embed.setImage(msgAttachments[0]);
+                } 
                 channels.charArchive.send(embed);
             }
         } catch (e) {
