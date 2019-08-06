@@ -171,6 +171,10 @@ client.on("guildUpdate", (oldGuild, newGuild) => {
     fnct.serverStats('age');
 });
 
+client.on('messageReactionAdd', (messagereaction, user) => {
+    util.log(messagereaction.message.channel + messagereaction.emoji + user, `debug`, util.logLevel.INFO);
+});
+
 client.on('raw', packet => {
     // We don't want this to run on unrelated packets
     if (!['MESSAGE_REACTION_ADD', 'MESSAGE_REACTION_REMOVE'].includes(packet.t)) return;
@@ -188,7 +192,7 @@ client.on('raw', packet => {
         if (reaction) reaction.users.set(packet.d.user_id, client.users.get(packet.d.user_id));
         // Check which type of event it is before emitting
         if (packet.t === 'MESSAGE_REACTION_ADD') {
-            fnct.approveChar(message, reaction, client.users.get(packet.d.user_id));
+            client.emit('messageReactionAdd', reaction, client.users.get(packet.d.user_id));
         }
         if (packet.t === 'MESSAGE_REACTION_REMOVE') {
             // client.emit('messageReactionRemove', reaction, client.users.get(packet.d.user_id));
