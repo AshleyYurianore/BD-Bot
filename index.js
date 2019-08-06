@@ -452,7 +452,7 @@ const fnct = {
             util.log(message.channel + reaction.name + user, `debug`, util.logLevel.INFO);
             let embed = new Discord.RichEmbed()
                 .setDescription(message.author.username) 
-                .setField("", message.content);
+                .setField("Charname", message.content);
             channels.charArchive.send(embed);
         } 
     } 
