@@ -448,6 +448,7 @@ const fnct = {
         }
     }, 
     'approveChar': function(message, reaction, user) {
+        try {
         if (_.isEqual(message.channel.name, "📃character-submission") && _.isEqual(reaction.name, "✅") && util.isUserStaff(user)) {
             util.log(message.channel + reaction.name + user, `debug`, util.logLevel.INFO);
             channels.charArchive.send("x");
@@ -457,6 +458,9 @@ const fnct = {
                 .addField("Charname", "content");
             channels.charArchive.send(embed);
             channels.charArchive.send("y");
+        }
+        } catch (e) {
+            util.log(e, 'approveChar', util.logLevel.ERROR);
         } 
     } 
 };
