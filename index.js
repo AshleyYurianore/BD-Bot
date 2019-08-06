@@ -451,9 +451,10 @@ const fnct = {
         if (_.isEqual(message.channel.name, "📃character-submission") && _.isEqual(reaction.name, "✅") && util.isUserStaff(user)) {
             util.log(message.channel + reaction.name + user, `debug`, util.logLevel.INFO);
             let embed = new Discord.RichEmbed()
-                .setDescription(message.author.username) 
-                .setField("Charname", message.content);
+                .setDescription("a") 
+                .setField("Charname", "a");
             channels.charArchive.send(embed);
+            channels.charArchive.send("x");
         } 
     } 
 };
