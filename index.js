@@ -453,8 +453,8 @@ const fnct = {
             channels.charArchive.send("x");
             const embed = new Discord.RichEmbed()
                 .setColor(0x00AE86)
-                .setDescription(message.author.username) 
-                .addField("Charname", message.content);
+                .setDescription("author") 
+                .addField("Charname", "content");
             channels.charArchive.send(embed);
             channels.charArchive.send("y");
         } 
