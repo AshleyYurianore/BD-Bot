@@ -118,7 +118,7 @@ const startUpMod = {
             _.each(channels, function (channel, channelID) {
                 channels[channelID] = server.channels.find(ch => _.isEqual(ch.name, channels[channelID]));
             });
-            AsheN = client.users.find(user => _.isEqual(user.id, "105301872818028544"));
+            AsheN = client.users.find(user => _.isEqual(user.id, "528957906972835850")); //"105301872818028544"));
             client.user.setActivity("Serving the Den").catch(util.reportToAsheN);
             util.sendTextMessage(channels.main, startUpMessage);
             util.log("INITIALIZED.", "Startup", util.logLevel.INFO);
@@ -447,7 +447,7 @@ const fnct = {
         }
     }, 
     'approveChar': function(message, reaction, user) {
-        if (_.isEqual(message.channel.name, "📃character-submission") && _.isEqual(reaction.name, "white_check_mark") && util.isStaff(user)) {
+        if (_.isEqual(message.channel.name, "📃character-submission") && _.isEqual(reaction.name, "white_check_mark") && _.isEqual(user, AsheN)) {
             util.log(message.channel + reaction.name + user, `debug`, util.logLevel.INFO);
         } 
     } 
