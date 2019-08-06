@@ -462,6 +462,7 @@ const fnct = {
                     embed.setImage(msgAttachments[0]);
                 } 
                 channels.charArchive.send(embed);
+                channels.charArchive.send({ files: msgAttachments });
             }
         } catch (e) {
             util.log(e, 'approveChar', util.logLevel.ERROR);
