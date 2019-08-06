@@ -455,7 +455,7 @@ const fnct = {
                     .setColor(0x00AE86)
                     .setDescription(message.author.username + " (" + message.author.id + ")") 
                     .addField("Charname", message.content)
-                    .addField("Attachments", message.attachments.map(a => a.url));
+                    .addField("Attachments", message.attachments.map(a => a.url) || "N/A");
                 ;
                 channels.charArchive.send(embed);
             }
