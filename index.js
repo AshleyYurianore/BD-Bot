@@ -21,6 +21,7 @@ let channels = {
     'main': "accalia-main",
     'logs': "accalia-logs",
     'warnings': "🚨warnings",
+    'charArchive': "tinkering", 
 };
 let AsheN;
 let lockdown = false;
@@ -449,6 +450,10 @@ const fnct = {
     'approveChar': function(message, reaction, user) {
         if (_.isEqual(message.channel.name, "📃character-submission") && _.isEqual(reaction.name, "✅") && util.isUserStaff(user)) {
             util.log(message.channel + reaction.name + user, `debug`, util.logLevel.INFO);
+            let embed = new Discord.RichEmbed()
+                .setDescription(message.author.username) 
+                .setField("", message.content);
+            channels.charArchive.send(embed);
         } 
     } 
 };
