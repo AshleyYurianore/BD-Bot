@@ -452,7 +452,7 @@ const fnct = {
         if (_.isEqual(message.channel.name, "📃character-submission") && _.isEqual(reaction.name, "✅") && util.isUserStaff(user)) {
             util.log(message.channel + reaction.name + user, `debug`, util.logLevel.INFO);
             channels.charArchive.send("x");
-            const embed = new Discord.RichEmbed()
+            const embed = new DiscordJS.RichEmbed()
                 .setColor(0x00AE86)
                 .setDescription("author") 
                 .addField("Charname", "content");
