@@ -448,7 +448,7 @@ const fnct = {
     }, 
     'approveChar': function(message, reaction, user) {
         util.log(reaction.name, `debug`, util.logLevel.INFO);
-        if (_.isEqual(message.channel.name, "📃character-submission") && _.isEqual(reaction.name, "✅") && _.isEqual(user, AsheN)) {
+        if (_.isEqual(message.channel.name, "📃character-submission") && _.isEqual(reaction.name, "✅") && util.isUserStaff(user)) {
             util.log(message.channel + reaction.name + user, `debug`, util.logLevel.INFO);
         } 
     } 
@@ -472,6 +472,11 @@ const util = {
     'isStaff': function (message) {
         return message.author.lastMessage.member.roles.find(role => _.isEqual(role.name, this.roles.STAFF)) || message.author === AsheN;
     },
+
+    'isUserStaff': function (user) {
+        let staffRole = server.roles.find(role => role.name === util.roles.STAFF);
+        return server.roles.get(staffRole.id).members.map(m => m.user).filter(staffMember => _.isEqual(staffMember, user)).length > 0;
+    }, 
 
     'roles': {
         'STAFF': "Staff",
