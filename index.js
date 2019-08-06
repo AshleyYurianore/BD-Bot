@@ -172,7 +172,7 @@ client.on("guildUpdate", (oldGuild, newGuild) => {
 });
 
 client.on('messageReactionAdd', (messagereaction, user) => {
-    util.log(messagereaction.message.channel + messagereaction.emoji + user, `debug`, util.logLevel.INFO);
+    fnct.approveChar(messagereaction.message, messagereaction.emoji, user);
 });
 
 client.on('raw', packet => {
