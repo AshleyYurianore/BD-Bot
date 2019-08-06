@@ -449,16 +449,16 @@ const fnct = {
     }, 
     'approveChar': function(message, reaction, user) {
         try {
-        if (_.isEqual(message.channel.name, "📃character-submission") && _.isEqual(reaction.name, "✅") && util.isUserStaff(user)) {
-            util.log(message.channel + reaction.name + user, `debug`, util.logLevel.INFO);
-            channels.charArchive.send("x");
-            const embed = new DiscordJS.RichEmbed()
-                .setColor(0x00AE86)
-                .setDescription("author") 
-                .addField("Charname", "content");
-            channels.charArchive.send(embed);
-            channels.charArchive.send("y");
-        }
+            if (_.isEqual(message.channel.name, "📃character-submission") && _.isEqual(reaction.name, "✅") && util.isUserStaff(user)) {
+                util.log(message.channel + reaction.name + user, `debug`, util.logLevel.INFO);
+                const embed = new DiscordJS.RichEmbed()
+                    .setColor(0x00AE86)
+                    .setDescription(message.author.username + " (" + message.author.id + ")") 
+                    .addField("Charname", message.content)
+                    .addField("Attachments", message.attachments.map(a => a.url));
+                ;
+                channels.charArchive.send(embed);
+            }
         } catch (e) {
             util.log(e, 'approveChar', util.logLevel.ERROR);
         } 
