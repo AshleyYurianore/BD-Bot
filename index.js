@@ -450,11 +450,13 @@ const fnct = {
     'approveChar': function(message, reaction, user) {
         if (_.isEqual(message.channel.name, "📃character-submission") && _.isEqual(reaction.name, "✅") && util.isUserStaff(user)) {
             util.log(message.channel + reaction.name + user, `debug`, util.logLevel.INFO);
-            let embed = new Discord.RichEmbed()
-                .setDescription("a") 
-                .setField("Charname", "a");
-            channels.charArchive.send(embed);
             channels.charArchive.send("x");
+            const embed = new Discord.RichEmbed()
+                .setColor(0x00AE86)
+                .setDescription(message.author.username) 
+                .addField("Charname", message.content);
+            channels.charArchive.send(embed);
+            channels.charArchive.send("y");
         } 
     } 
 };
