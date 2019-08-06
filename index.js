@@ -443,7 +443,7 @@ const fnct = {
         }
     }, 
     'approveChar': function(message, reaction, user) {
-        util.log(message.channel + reaction.name + user, `debug`, util. logLevel.INFO);
+        util.log(message.channel + reaction.name + user, `debug`, util.logLevel.INFO);
     } 
 };
 
