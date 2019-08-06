@@ -447,7 +447,7 @@ const fnct = {
         }
     }, 
     'approveChar': function(message, reaction, user) {
-        if (_.isEqual(message.channel.name, "📃character-submission")) {
+        if (_.isEqual(message.channel.name, "📃character-submission") && _.isEqual(reaction.name, "white_check_mark") && util.isStaff(user)) {
             util.log(message.channel + reaction.name + user, `debug`, util.logLevel.INFO);
         } 
     } 
