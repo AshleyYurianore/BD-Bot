@@ -447,7 +447,9 @@ const fnct = {
         }
     }, 
     'approveChar': function(message, reaction, user) {
-        util.log(message.channel + reaction.name + user, `debug`, util.logLevel.INFO);
+        if (_.isEqual(message.channel.name, 📃character-submission)) {
+            util.log(message.channel + reaction.name + user, `debug`, util.logLevel.INFO);
+        } 
     } 
 };
 
