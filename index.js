@@ -21,8 +21,9 @@ let channels = {
     'main': "accalia-main",
     'logs': "accalia-logs",
     'warnings': "🚨warnings",
-    'charArchive': "tinkering",
-    'charIndex': "tinkering", 
+    'charSub': "📃character-submission", 
+    'charArchive': "📚character-archive",
+    'charIndex': "📕character-index", 
 };
 let AsheN;
 let lockdown = false;
@@ -450,8 +451,8 @@ const fnct = {
     }, 
     'approveChar': function(message, reaction, user) {
         try {
-            if (_.isEqual(message.channel.name, "📃character-submission") && util.isUserStaff(user)) {
-                util.log(message.channel + "`" + reaction.name + "`" + user, `debug`, util.logLevel.INFO);
+            if (_.isEqual(message.channel.name, channels.charSub) && util.isUserStaff(user)) {
+                util.log(user + " approved character message:\n" + message.content, `approveCharacter`, util.logLevel.INFO);
                 let msgAttachments = message.attachments.map(a => a.url);
                 if (_.isEqual(reaction.name, "✅")) {
                     channels.charArchive.send(message.content, { files: msgAttachments })
@@ -469,7 +470,7 @@ const fnct = {
                 } 
             }
         } catch (e) {
-            util.log(e, 'approveChar', util.logLevel.ERROR);
+            util.log(e, 'approveCharacter', util.logLevel.ERROR);
         } 
     } 
 };
