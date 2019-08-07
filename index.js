@@ -453,6 +453,9 @@ const fnct = {
                 util.log(message.channel + "`" + reaction.name + "`" + user, `debug`, util.logLevel.INFO);
                 let msgAttachments = message.attachments.map(a => a.url);
                 if (_.isEqual(reaction.name, "✅")) {
+                    let msgContent = message.content;
+                    channels.charArchive.send(msgContent, { files: msgAttachments });
+                } else if (_.isEqual(reaction.name, "1⃣") {
                     let msgContent = "User: " + message.author + "\n" + message.content;
                     channels.charArchive.send(msgContent, { files: msgAttachments });
                 } 
