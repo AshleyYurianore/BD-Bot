@@ -454,18 +454,17 @@ const fnct = {
                 util.log(message.channel + "`" + reaction.name + "`" + user, `debug`, util.logLevel.INFO);
                 let msgAttachments = message.attachments.map(a => a.url);
                 if (_.isEqual(reaction.name, "✅")) {
-                    let msgContent = message.content;
-                    channels.charArchive.send(msgContent, { files: msgAttachments })
+                    channels.charArchive.send(message.content, { files: msgAttachments })
                         .then(msg => {
                             let msgImages = msg.attachments.map(a => a.url);
-                            channels.charIndex.send('`r!addchar \"charName\"' + msgContent +"\n" + msgImages + "`");
+                            channels.charIndex.send('`r!addchar \"charName\"\n' + message.content +"\n" + msgImages + "`");
                         });
                 } else if (_.isEqual(reaction.name, "⭐")) {
                     let msgContent = "User: " + message.author + "\n" + message.content;
                     channels.charArchive.send(msgContent, { files: msgAttachments })
                         .then(msg => {
                             let msgImages = msg.attachments.map(a => a.url);
-                            channels.charIndex.send('`r!addchar \"charName\"' + msgContent +"\n" + msgImages + "`");
+                            channels.charIndex.send('`r!addchar \"charName\"\n' + message.content +"\n" + msgImages + "`");
                         });
                 } 
             }
