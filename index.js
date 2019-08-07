@@ -454,10 +454,18 @@ const fnct = {
                 let msgAttachments = message.attachments.map(a => a.url);
                 if (_.isEqual(reaction.name, "✅")) {
                     let msgContent = message.content;
-                    channels.charArchive.send(msgContent, { files: msgAttachments });
+                    channels.charArchive.send(msgContent, { files: msgAttachments })
+                        .then(msg => {
+                            let msgImages = msg.attachments.map(a => a.url);
+                            channels.charIndex.send('`r!addchar \"charName\"' + msgContent +"\n" + msgImages + "`");
+                        });
                 } else if (_.isEqual(reaction.name, "⭐")) {
                     let msgContent = "User: " + message.author + "\n" + message.content;
-                    channels.charArchive.send(msgContent, { files: msgAttachments });
+                    channels.charArchive.send(msgContent, { files: msgAttachments })
+                        .then(msg => {
+                            let msgImages = msg.attachments.map(a => a.url);
+                            channels.charIndex.send('`r!addchar \"charName\"' + msgContent +"\n" + msgImages + "`");
+                        });
                 } 
             }
         } catch (e) {
