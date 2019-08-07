@@ -451,6 +451,7 @@ const fnct = {
         try {
             if (_.isEqual(message.channel.name, "📃character-submission") && _.isEqual(reaction.name, "✅") && util.isUserStaff(user)) {
                 util.log(message.channel + reaction.name + user, `debug`, util.logLevel.INFO);
+                let msgContent = "User: " + message.author + "/n" + message.content
                 let msgAttachments = message.attachments.map(a => a.url);
                 let embed = new DiscordJS.RichEmbed()
                     .setColor(0x00AE86)
@@ -462,7 +463,7 @@ const fnct = {
                     embed.setImage(msgAttachments[0]);
                 } 
                 channels.charArchive.send(embed);
-                channels.charArchive.send({ files: msgAttachments });
+                channels.charArchive.send(msgContent, { files: msgAttachments });
             }
         } catch (e) {
             util.log(e, 'approveChar', util.logLevel.ERROR);
