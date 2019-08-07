@@ -21,7 +21,8 @@ let channels = {
     'main': "accalia-main",
     'logs': "accalia-logs",
     'warnings': "🚨warnings",
-    'charArchive': "tinkering", 
+    'charArchive': "tinkering",
+    'charIndex': "tinkering", 
 };
 let AsheN;
 let lockdown = false;
