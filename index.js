@@ -452,8 +452,8 @@ const fnct = {
     'approveChar': function(message, reaction, user) {
         try {
             if (_.isEqual(message.channel.name, channels.charSub.name) && util.isUserStaff(user)) {
-                util.log(user + " approved character message:\n" + message.content, `approveCharacter`, util.logLevel.INFO);
                 let msgAttachments = message.attachments.map(a => a.url);
+                util.log(user + " approved character message:\n" + message.content + "\n" + msgAttachments, `approveCharacter`, util.logLevel.INFO);
                 if (_.isEqual(reaction.name, "✅")) {
                     channels.charArchive.send(message.content, { files: msgAttachments })
                         .then(msg => {
@@ -465,7 +465,7 @@ const fnct = {
                     channels.charArchive.send(msgContent, { files: msgAttachments })
                         .then(msg => {
                             let msgImages = msg.attachments.map(a => a.url);
-                            channels.charIndex.send('`' + message.author + ' Your character has been approved/updated and can be found in the index under `');
+                            channels.charIndex.send('`' + message.author + ' Your character has been approved/updated and can be found in the index under " "`');
                             channels.charIndex.send('`r!addchar \"charName\"\n' + message.content +"\n" + msgImages + "`");
                         });
                 } 
