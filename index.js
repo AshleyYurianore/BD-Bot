@@ -451,7 +451,7 @@ const fnct = {
     }, 
     'approveChar': function(message, reaction, user) {
         try {
-            if (_.isEqual(message.channel.name, channels.charSub) && util.isUserStaff(user)) {
+            if (_.isEqual(message.channel.name, channels.charSub.name) && util.isUserStaff(user)) {
                 util.log(user + " approved character message:\n" + message.content, `approveCharacter`, util.logLevel.INFO);
                 let msgAttachments = message.attachments.map(a => a.url);
                 if (_.isEqual(reaction.name, "✅")) {
