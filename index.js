@@ -449,21 +449,13 @@ const fnct = {
     }, 
     'approveChar': function(message, reaction, user) {
         try {
-            if (_.isEqual(message.channel.name, "📃character-submission") && _.isEqual(reaction.name, "✅") && util.isUserStaff(user)) {
-                util.log(message.channel + reaction.name + user, `debug`, util.logLevel.INFO);
-                let msgContent = "User: " + message.author + "/n" + message.content
+            if (_.isEqual(message.channel.name, "📃character-submission") && util.isUserStaff(user)) {
+                util.log(message.channel + "`" + reaction.name + "`" + user, `debug`, util.logLevel.INFO);
                 let msgAttachments = message.attachments.map(a => a.url);
-                let embed = new DiscordJS.RichEmbed()
-                    .setColor(0x00AE86)
-                    .setDescription(message.author.username + " (" + message.author.id + ")") 
-                    .addField("Charname", message.content)
-                    .addField("Attachments", msgAttachments.length > 0 ? msgAttachments : "N/A")
-                ;  
-                if (msgAttachments.length > 0) {
-                    embed.setImage(msgAttachments[0]);
+                if (_.isEqual(reaction.name, "✅")) {
+                    let msgContent = "User: " + message.author + "\n" + message.content;
+                    channels.charArchive.send(msgContent, { files: msgAttachments });
                 } 
-                channels.charArchive.send(embed);
-                channels.charArchive.send(msgContent, { files: msgAttachments });
             }
         } catch (e) {
             util.log(e, 'approveChar', util.logLevel.ERROR);
