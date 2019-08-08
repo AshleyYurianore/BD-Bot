@@ -401,7 +401,7 @@ let count = 0;
             });
 util.log(count, 'debug', util.logLevel.INFO);
         } 
-    } 
+    },
     'call': async function (message) {
         const args = message.content.slice(prefix.length).trim().split(/ +/g);
         const command = args.shift().toLowerCase();
