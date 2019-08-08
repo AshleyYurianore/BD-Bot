@@ -28,6 +28,7 @@ let channels = {
 let AsheN;
 let lockdown = false;
 let disableMentions = true;
+let ongoingProcess = false;
 
 
 const dbMod = {
@@ -391,6 +392,16 @@ const cmd = {
             util.log('Locking down...', 'quit', util.logLevel.FATAL);
         }
     },
+    'cn': function (message) {
+        if (util.isStaff(message)) {
+let count = 0;
+            let newcomerRole = server.roles.find(role => role.name === "Newcomer");
+            _.each(server.roles.get(newcomerRole.id).members.map(m => m.user), member => {
+                count++;
+            });
+util.log(count, 'debug', util.logLevel.INFO);
+        } 
+    } 
     'call': async function (message) {
         const args = message.content.slice(prefix.length).trim().split(/ +/g);
         const command = args.shift().toLowerCase();
