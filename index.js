@@ -560,18 +560,40 @@ const util = {
     'log': function (message, moduleName, level) {
         if (_.isUndefined(channels.logs)) return;
         level = ((_.isUndefined(level)) ? this.logLevel.INFO : level);
-        let logMessage = level + " | " + moment().format('MMM DD YYYY - HH:mm:ss.SSS') + " | " + moduleName + ": " + message;
+        let embedColor = 0xE0FFFF;
+        switch (level) {
+            case util.logLevel.WARN:
+                embedColor = 0xFFD700;
+                break;
+            case util.logLevel.ERROR:
+                embedColor = 0xFF7F50;
+                break;
+            case util.logLevel.FATAL:
+                embedColor = 0xDC143C;
+                break;
+            default:
+                break;
+        }
+        let currDateTime = moment().format('MMM DD YYYY - HH:mm:ss.SSS');
+        let logMessage = level + " | " + currDateTime + " | " + moduleName + ": " + message;
 
         if (_.isEqual(level, this.logLevel.FATAL)) this.reportToAsheN(message);
-        channels.logs.send(logMessage);
+        // channels.logs.send(logMessage);
+        let logEmbed = new DiscordJS.RichEmbed()
+            .setAuthor(currDateTime)
+            .setColor(embedColor)
+            .addField(level, message)
+            .setFooter(moduleName)
+            .setTimestamp(new Date());
+        channels.logs.send(logEmbed);
 
         if (_.isUndefined(localConfig)) return;
         console.log(logMessage);
     },
 
     'logLevel': {
-        'INFO':  "INFO ",
-        'WARN':  "WARN ",
+        'INFO':  "INFO",
+        'WARN':  "WARN",
         'ERROR': "**ERROR**",
         'FATAL': "__**FATAL**__",
     }
