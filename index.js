@@ -400,8 +400,8 @@ const cmd = {
             let newcomerRole = server.roles.find(role => role.name === "Newcomer");
             _.each(server.roles.get(newcomerRole.id).members.map(m => m.user), member => {
                 try {
-                    server.member(member).removeRole(newcomerRole)
-                        .then(() => { successCount++; });
+                    server.member(member).removeRole(newcomerRole);
+                    successCount++;
                 } catch (e) {
                     errorCount++;
                     util.log("Couldn't remove Newcomer from: " + member + "\n" + e, 'clearNewcomer', util.logLevel.ERROR);
