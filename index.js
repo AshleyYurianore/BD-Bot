@@ -401,7 +401,7 @@ const cmd = {
             let newcomerMembers = server.roles.get(newcomerRole.id).members.map(m => m.user);
             _.each(newcomerMembers, (member, index) => {
                 try {
-                    server.member(member).removeRole(newcomerRole);
+                    server.member(member).removeRole(newcomerRole)
                         .then(() => {
                             successCount++;
                             if (index+1 === newcomerMembers.length) {
