@@ -393,13 +393,23 @@ const cmd = {
         }
     },
     'cn': function (message) {
-        if (util.isStaff(message)) {
-let count = 0;
+        if (util.isStaff(message) && !ongoingProcess) {
+            ongoingProcess = true;
+            let successCount = 0;
+            let errorCount = 0;
             let newcomerRole = server.roles.find(role => role.name === "Newcomer");
             _.each(server.roles.get(newcomerRole.id).members.map(m => m.user), member => {
-                count++;
+                try {
+                    member.removeRole(newcomerRole)
+                        .then(() => { successCount++; });
+                } catch (e) {
+                    errorCount++;
+                    util.log("Couldn't remove Newcomer from: " + member + "\n" + e, 'clearNewcomer', util.logLevel.ERROR);
+                };
             });
-util.log(count, 'debug', util.logLevel.INFO);
+            let logText = successCount + '/' + (successCount + errorCount) + ' users cleared of Newcomer role.';
+            util.log(logText, 'clearNewcomer', util.logLevel.INFO);
+            ongoingProcess = false;
         } 
     },
     'call': async function (message) {
