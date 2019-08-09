@@ -407,6 +407,7 @@ const cmd = {
                             if (index+1 === newcomerMembers.length) {
                                 let logText = successCount + '/' + (successCount + errorCount) + ' users cleared of Newcomer role.';
                                 util.log(logText, 'clearNewcomer', util.logLevel.INFO);
+                                message.channel.send(logText);
                                 ongoingProcess = false;
                             }
                         });
@@ -416,6 +417,7 @@ const cmd = {
                     if (index+1 === newcomerMembers.length) {
                         let logText = successCount + '/' + (successCount + errorCount) + ' users cleared of Newcomer role.';
                         util.log(logText, 'clearNewcomer', util.logLevel.INFO);
+                        message.channel.send(logText);
                         ongoingProcess = false;
                     }
                 };
