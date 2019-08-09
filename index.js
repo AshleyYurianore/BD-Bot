@@ -398,7 +398,7 @@ const cmd = {
             let successCount = 0;
             let errorCount = 0;
             let newcomerRole = server.roles.find(role => role.name === "Newcomer");
-            _.each(server.roles.get(newcomerRole.id).members.map(m => m.user), (key, member) => {
+            _.each(server.roles.get(newcomerRole.id).members.map(m => m.user), member => {
                 try {
                     member.removeRole(newcomerRole)
                         .then(() => { successCount++; });
