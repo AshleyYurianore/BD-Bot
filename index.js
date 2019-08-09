@@ -580,9 +580,9 @@ const util = {
         if (_.isEqual(level, this.logLevel.FATAL)) this.reportToAsheN(message);
         // channels.logs.send(logMessage);
         let logEmbed = new DiscordJS.RichEmbed()
-            .setAuthor(currDateTime)
+            .setAuthor(level)
             .setColor(embedColor)
-            .addField(level, message)
+            .setDescription(message)
             .setFooter(moduleName)
             .setTimestamp(new Date());
         channels.logs.send(logEmbed);
