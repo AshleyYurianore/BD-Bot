@@ -330,6 +330,7 @@ const cmd = {
             if (!server.roles.find(role => _.isEqual(role.name, util.roles.WARN_2)))
                 return util.sendTextMessage(message.channel, `I can't find the role for '${util.roles.WARN_2}' ... :thinking:`);
 
+            let innocentRole = server.roles.find(role => _.isEqual(role.name, util.roles.INNOCENT));
             let warnRole1 = server.roles.find(role => _.isEqual(role.name, util.roles.WARN_1));
             let warnRole2 = server.roles.find(role => _.isEqual(role.name, util.roles.WARN_2));
             let hasWarn1 = member.roles.find(role => _.isEqual(role.name, util.roles.WARN_1));
@@ -357,7 +358,14 @@ const cmd = {
                     });
             } else {
                 await member.addRole(warnRole1)
-                    .then(() => { level = 1 })
+                    .then(() => {
+                        member.removeRole(innocentRole) 
+                            .catch(() => {
+                                util.log(`Failed to remove Innocent role from ${member}.`, 'Warn: remove Innocent role', util.logLevel.ERROR);
+                                err = true;
+                            });
+                        level = 1;
+                     })
                     .catch(() => {
                         err = true;
                         util.log(`Failed to add Warning level 1 to ${member}.`, 'Warn: 0->1', util.logLevel.ERROR);
@@ -539,6 +547,7 @@ const util = {
         'STAFF': "Staff",
         'NSFW': "NSFW",
         'MUTED': "Muted",
+        'INNOCENT': "Innocent", 
         'WARN_1': "Warned 1x",
         'WARN_2': "Warned 2x",
         'LVL_0': "Lewd (Lvl 0+)",
