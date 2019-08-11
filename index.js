@@ -394,11 +394,11 @@ const cmd = {
     },
     'cn': function (message) {
         if (util.isStaff(message) && !ongoingProcess) {
-            ongoingProcess = true;
             let successCount = 0;
             let errorCount = 0;
             let newcomerRole = server.roles.find(role => role.name === "Newcomer");
             let newcomerMembers = server.roles.get(newcomerRole.id).members.map(m => m.user);
+            ongoingProcess = newcomerMembers.length > 0;
             _.each(newcomerMembers, (member, index) => {
                 try {
                     server.member(member).removeRole(newcomerRole)
