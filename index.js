@@ -393,19 +393,20 @@ const cmd = {
         }
     },
     'cn': function (message) {
-        if (util.isStaff(message) && !ongoingProcess) {
+        if (util.isStaff(message)) {
+            let responseText = ' users cleared of Newcomer role.';
             let successCount = 0;
             let errorCount = 0;
             let newcomerRole = server.roles.find(role => role.name === "Newcomer");
             let newcomerMembers = server.roles.get(newcomerRole.id).members.map(m => m.user);
             _.each(newcomerMembers, (member, index) => {
-          util.log(index + "/" + newcomerMembers.length + " " + member, 'debug', util.logLevel.INFO);
- try {
+            util.log(index + "/" + newcomerMembers.length + " " + member, 'debug', util.logLevel.INFO);
+                try {
                     server.member(member).removeRole(newcomerRole)
                         .then(() => {
                             successCount++;
                             if (index+1 === newcomerMembers.length) {
-                                let logText = successCount + '/' + (successCount + errorCount) + ' users cleared of Newcomer role.';
+                                let logText = successCount + '/' + (successCount + errorCount) + responseText;
                                 util.log(logText, 'clearNewcomer', util.logLevel.INFO);
                                 message.channel.send(logText);
                             }
@@ -414,12 +415,15 @@ const cmd = {
                     errorCount++;
                     util.log("Couldn't remove Newcomer from: " + member + "\n" + e, 'clearNewcomer', util.logLevel.ERROR);
                     if (index+1 === newcomerMembers.length) {
-                        let logText = successCount + '/' + (successCount + errorCount) + ' users cleared of Newcomer role.';
+                        let logText = successCount + '/' + (successCount + errorCount) + responseText;
                         util.log(logText, 'clearNewcomer', util.logLevel.INFO);
                         message.channel.send(logText);
                     }
                 };
             });
+            if (newcomerMembers.length === 0) {
+                message.channel.send("0" + responseText);
+            } 
         } 
     },
     'call': async function (message) {
