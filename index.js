@@ -398,9 +398,9 @@ const cmd = {
             let errorCount = 0;
             let newcomerRole = server.roles.find(role => role.name === "Newcomer");
             let newcomerMembers = server.roles.get(newcomerRole.id).members.map(m => m.user);
-            ongoingProcess = newcomerMembers.length > 0;
             _.each(newcomerMembers, (member, index) => {
-                try {
+          util.log(index + "/" + newcomerMembers.length + " " + member, 'debug', util.logLevel.INFO);
+ try {
                     server.member(member).removeRole(newcomerRole)
                         .then(() => {
                             successCount++;
@@ -408,7 +408,6 @@ const cmd = {
                                 let logText = successCount + '/' + (successCount + errorCount) + ' users cleared of Newcomer role.';
                                 util.log(logText, 'clearNewcomer', util.logLevel.INFO);
                                 message.channel.send(logText);
-                                ongoingProcess = false;
                             }
                         });
                 } catch (e) {
@@ -418,7 +417,6 @@ const cmd = {
                         let logText = successCount + '/' + (successCount + errorCount) + ' users cleared of Newcomer role.';
                         util.log(logText, 'clearNewcomer', util.logLevel.INFO);
                         message.channel.send(logText);
-                        ongoingProcess = false;
                     }
                 };
             });
