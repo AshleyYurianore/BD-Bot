@@ -486,10 +486,10 @@ const fnct = {
                     break;
             }
             server.channels.find(ch => _.isEqual(ch.id, channel)).setName(str).then(() => {
-                util.log('Successfully updated server stats! (' + mode + ')', 'Server Stats', this.logLevel.INFO);
+                util.log('Successfully updated server stats! (' + mode + ')', 'Server Stats', util.logLevel.INFO);
             });
         } catch (e) {
-            util.log('Failed to update server stats: ' + mode, 'Server Stats', this.logLevel.ERROR);
+            util.log('Failed to update server stats: ' + mode, 'Server Stats', util.logLevel.ERROR);
         }
     }, 
     'approveChar': function(message, reaction, user) {
