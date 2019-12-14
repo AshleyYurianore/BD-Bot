@@ -23,8 +23,25 @@ let channels = {
     'warnings': "🚨warnings",
     'charSub': "📃character-submission", 
     'charArchive': "📚character-archive",
-    'charIndex': "📕character-index", 
+    'charIndex': "📕character-index",
+    'reports': "📮requests-and-reports",
+    'lfp-info': "📌lfp-info",
+    'lfp-contact': "💬lfp-contact",
+    'lfp-male': "🍆lfp-male",
+    'lfp-female': "🍑lfp-female",
+    'lfp-vanilla': "🍦lfp-vanilla",
+    'lfp-gay': "👬lfp-gay",
+    'lfp-lesbian': "👭lfp-lesbian",
+    'lfp-trans': "🌽lfp-trans",
+    'lfp-futa': "🥕lfp-futa-herm",
+    'lfp-furry': "😺lfp-furry",
+    'lfp-bestiality': "🦄lfp-bestiality",
+    'lfp-extreme': "✨lfp-extreme",
+    'lfp-long': "📰lfp-long-term-plot",
+    'lfp-rabbit': "📺lfp-vc-rabbit",
 };
+let lfpTimer = [];
+let lfpChannels = [];
 let AsheN;
 let lockdown = false;
 let disableMentions = true;
@@ -134,6 +151,19 @@ const startUpMod = {
             fnct.serverStats('roles');
             fnct.serverStats('channels');
             fnct.serverStats('age');
+
+            lfpChannels.push(channels["lfp-bestiality"]);
+            lfpChannels.push(channels["lfp-extreme"]);
+            lfpChannels.push(channels["lfp-female"]);
+            lfpChannels.push(channels["lfp-furry"]);
+            lfpChannels.push(channels["lfp-futa"]);
+            lfpChannels.push(channels["lfp-gay"]);
+            lfpChannels.push(channels["lfp-lesbian"]);
+            lfpChannels.push(channels["lfp-long"]);
+            lfpChannels.push(channels["lfp-male"]);
+            lfpChannels.push(channels["lfp-rabbit"]);
+            lfpChannels.push(channels["lfp-trans"]);
+            lfpChannels.push(channels["lfp-vanilla"]);
 
             return;
             this.testschedule();
@@ -288,9 +318,116 @@ client.on("message", (message) => {
     }
 
     // Prefix as first character -> command
-     else if (_.isEqual(message.content.indexOf(prefix), 0)) {
+    else if (_.isEqual(message.content.indexOf(prefix), 0)) {
         cmd.call(message);
-        return;
+    } else if (!_.isEqual(message.channel.lastMessage.author, client.user)) {
+        _.each(lfpChannels, (channel) => {
+            if (!_.isNull(channel) && _.isEqual(message.channel.name, channel.name)) {
+                if (!_.isUndefined(lfpTimer[channel.name])) {
+                    clearTimeout(lfpTimer[channel.name]);
+                }
+                lfpTimer[channel.name] = setTimeout(() => {
+                    util.log('Sending lfp info in ' + channel, "lfpInfo", util.logLevel.INFO);
+
+                    channel.fetchMessages()
+                        .then(messages => {
+                            let msg = messages.filter(m => _.isEqual(m.author.id, client.user.id));
+                            if (msg.size > 0) {
+                                msg.first().delete()
+                                    .then(util.log('Deleted last Accalia message in ' + channel, "lfpInfo", util.logLevel.INFO))
+                                    .catch(util.log('Failed to delete last Accalia message ' + channel, "lfpInfo", util.logLevel.WARN));
+                            }
+                        });
+
+                    let title, color, target;
+
+                    switch (channel.name.substr(6).split(/-/g)[0]) {
+                        case "male":
+                            title = "MALES";
+                            color = server.roles.find(role => _.isEqual(role.name, "Male")).color;
+                            target = "Males, Femboys, etc.";
+                            break;
+                        case "female":
+                            title = "FEMALES";
+                            color = server.roles.find(role => _.isEqual(role.name, "Female")).color;
+                            target = "Females, Tomboys, etc.";
+                            break;
+                        case "vanilla":
+                            title = "VANILLA RP";
+                            color = server.roles.find(role => _.isEqual(role.name, "Vanilla")).color;
+                            target = "People with Vanilla Kinks and the \"Vanilla\" role";
+                            break;
+                        case "gay":
+                            title = "GAY (Male x Male) RP";
+                            color = server.roles.find(role => _.isEqual(role.name, "Gay")).color;
+                            target = "Males with the \"Gay\" and/or \"Bi/Pansexual\" role";
+                            break;
+                        case "lesbian":
+                            title = "LESBIAN (Female x Female) RP";
+                            color = server.roles.find(role => _.isEqual(role.name, "Lesbian")).color;
+                            target = "Females with the \"Lesbian\" and/or \"Bi/Pansexual\" role";
+                            break;
+                        case "trans":
+                            title = "TRANS";
+                            color = server.roles.find(role => _.isEqual(role.name, "MtF")).color;
+                            target = "People with the MtF and FtM roles";
+                            break;
+                        case "futa":
+                            title = "FUTANARI / HERMAPHRODITE";
+                            color = server.roles.find(role => _.isEqual(role.name, "Futa")).color;
+                            target = "Futanari and Hermaphrodites (not trans)";
+                            break;
+                        case "furry":
+                            title = "FURRY / ANTHRO";
+                            color = server.roles.find(role => _.isEqual(role.name, "Furry")).color;
+                            target = "Furries and Anthromorphs (not beasts/bestiality rp)";
+                            break;
+                        case "bestiality":
+                            title = "BESTIALITY RP";
+                            color = server.roles.find(role => _.isEqual(role.name, "Beast")).color;
+                            target = "Beasts, people interested in Bestiality RP (not furries)";
+                            break;
+                        case "xtreme":
+                            title = "EXTREME KINKS RP";
+                            color = server.roles.find(role => _.isEqual(role.name, "Extreme")).color;
+                            target = "People with Extreme Kinks and the \"Extreme\" role";
+                            break;
+                        case "long":
+                            title = "LONG TERM / PLOT DRIVEN RP";
+                            color = 0x00FFCA;
+                            target = "People who would like a long term and/or plot driven RP";
+                            break;
+                        case "vc":
+                            title = "VOICE CHATS / RABBIT / ETC.";
+                            color = 0xA8A8A8;
+                            target = "People wanting to find others to go in a Voice Chat or Rabbit session or etc. with";
+                            break;
+                    }
+
+                    let lfpEmbed = new DiscordJS.RichEmbed()
+                        .setColor(color)
+                        .setTitle("Looking for " + title + " Channel Info")
+                        .setDescription(
+                            "This channel is specifically for posts, which are **looking for " + title + "**.\n\n" +
+                            "If you do see posts, which are __not clearly looking for these kinds of RP/things__ in this channel, **please** let the staff team know in " + channels.reports + "!\n\n" +
+                            "If you want to **contact** someone who posted in this channel, **please check their DM Roles** first before doing so and please use " + channels["lfp-contact"] + "!\n\n" +
+                            "*More info in:* " + channels["lfp-info"]
+                        )
+                        .addField(
+                            "What posts are to be expected and to be posted in this channel?",
+                            "LFP Ads, which explicitly state that they are __looking for " + title + "__"
+                        )
+                        .addField(
+                            "Target Audience for LFP posts:",
+                            target
+                        )
+                    ;
+
+                    channel.send(lfpEmbed);
+                }, 2000);
+            }
+        });
+
     }
 });
 
