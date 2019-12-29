@@ -236,7 +236,7 @@ client.on('raw', packet => {
 
 client.on("message", (message) => {
     if (_.isEqual(message.author.username, client.user.username)) return;
-    if (message.author.bot && !((_.isEqual(message.author.id, "159985870458322944") && _.isEqual(message.channel.name, "📈level-up-log")) || (_.isEqual(message.author.id, "155149108183695360") && _.isEqual(message.channel.name, "🚨reports-log"))) return;
+    if (message.author.bot && !((_.isEqual(message.author.id, "159985870458322944") && _.isEqual(message.channel.name, "📈level-up-log")) || (_.isEqual(message.author.id, "155149108183695360") && _.isEqual(message.channel.name, "🚨reports-log")))) return;
     if (!message.channel.guild) return;
     if (lockdown) return;
 
