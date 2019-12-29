@@ -317,7 +317,7 @@ client.on("message", (message) => {
         });
     }
     else if (_.isEqual(message.channel.name, "🚨reports-log")) {
-        util.log('debug', 'Mute check', util.logLevel.INFO);
+        util.log(message.embeds, 'Mute check', util.logLevel.INFO);
     } 
     // Prefix as first character -> command
     else if (_.isEqual(message.content.indexOf(prefix), 0)) {
