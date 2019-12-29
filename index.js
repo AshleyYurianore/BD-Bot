@@ -318,7 +318,8 @@ client.on("message", (message) => {
     }
     else if (_.isEqual(message.channel.name, "🚨reports-log")) {
         if (message.embeds && message.embeds[0].author && message.embeds[0].author.name.indexOf('Mute')) {
-            util.log('Bingo: ' + (typeof message.embeds[0].fields[0].value), 'Mute check', util.logLevel.INFO);
+let v = typeof message.embeds[0].fields[0].value;
+            message.channel.send('`' + (v) + '`');
 return;
             if (usr.roles.find(role => _.isEqual(role.name, util.roles.NEW))) {
                 util.log('Bingo: ' + message.embeds[0].fields[0].value, 'Mute check', util.logLevel.INFO);
