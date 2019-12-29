@@ -539,19 +539,27 @@ const cmd = {
     },
     'cn': function (message) {
         if (util.isStaff(message)) {
-            let responseText = ' users cleared of Newcomer role.';
             let successCount = 0;
+            let kickCount = 0;
             let errorCount = 0;
             let newcomerRole = server.roles.find(role => role.name === "Newcomer");
             let newcomerMembers = server.roles.get(newcomerRole.id).members.map(m => m.user);
             _.each(newcomerMembers, (member, index) => {
-            util.log(index + "/" + newcomerMembers.length + " " + member, 'debug', util.logLevel.INFO);
+            util.log(" Clearing newcomer role from: " + member + " (" + (index+1) + "/" + newcomerMembers.length + ")", "clearNewcomer", util.logLevel.INFO);
                 try {
                     server.member(member).removeRole(newcomerRole)
-                        .then(() => {
-                            successCount++;
+                        .then((guildMember) => {
+                            if (_.isNull(guildMember.roles.find(role => role.name === "NSFW"))) {
+                                let reason = guildMember + " kicked from not having NSFW role for a longer period of time.";
+                                guildMember.kick(reason)
+                                    .then(util.log(reason, 'clearNewcomer', util.logLevel.INFO))
+                                    .catch(util.log("Failed to kick inactive member: " + guildMember, 'clearNewcomer', util.logLevel.WARN));
+                                kickCount++;
+                            } else {
+                                successCount++;
+                            }
                             if (index+1 === newcomerMembers.length) {
-                                let logText = successCount + '/' + (successCount + errorCount) + responseText;
+                                let logText = successCount + '/' + (successCount + errorCount) + " users cleared of Newcomer role. " + kickCount + " users kicked from not having the NSFW role until now.";
                                 util.log(logText, 'clearNewcomer', util.logLevel.INFO);
                                 message.channel.send(logText);
                             }
