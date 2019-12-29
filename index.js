@@ -320,7 +320,10 @@ client.on("message", (message) => {
         if (message.embeds && message.embeds[0].author && message.embeds[0].author.name.indexOf('Mute')) {
             let usr = message.embeds[0].fields[0].value;
             let usrid = usr.match(/([0-9])+/g);
-            message.channel.send('`' + (usrid) + '`');
+            let userM = server.members.find(m => _.isEqual(m.id, usrid));
+            if (userM) {
+                util.log(userM, 'Mute check', util.logLevel.INFO);
+            } 
 return;
             if (usr.roles.find(role => _.isEqual(role.name, util.roles.NEW))) {
                 util.log('Bingo: ' + message.embeds[0].fields[0].value, 'Mute check', util.logLevel.INFO);
