@@ -19,7 +19,7 @@ const prefix = _.isUndefined(localConfig) ? process.env.PREFIX : localConfig.PRE
 let server = _.isUndefined(localConfig) ? process.env.SERVER_ID : localConfig.SERVER;
 let channels = {
     'main': "accalia-main",
-    'logs': "accalia-logs",
+    'logs': "accalia-logs", 
     'warnings': "🚨warnings",
     'charSub': "📃character-submission", 
     'charArchive': "📚character-archive",
@@ -316,7 +316,9 @@ client.on("message", (message) => {
             }
         });
     }
-
+    else if (_.isEqual(message.channel.name, "🚨reports-log")) {
+        util.log('debug', 'Mute check', util.logLevel.INFO);
+    } 
     // Prefix as first character -> command
     else if (_.isEqual(message.content.indexOf(prefix), 0)) {
         cmd.call(message);
