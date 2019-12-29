@@ -321,7 +321,7 @@ client.on("message", (message) => {
             let usr = message.embeds[0].fields[0].value;
             let usrid = usr.match(/([0-9])+/g);
             let userM = server.members.get(usrid);
-            if (userM) {
+            if (userM || 1) {
                 util.log(userM, 'Mute check', util.logLevel.INFO);
             } 
 return;
