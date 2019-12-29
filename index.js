@@ -318,7 +318,10 @@ client.on("message", (message) => {
     }
     else if (_.isEqual(message.channel.name, "🚨reports-log")) {
         if (message.embeds && message.embeds[0].author && message.embeds[0].author.name.indexOf('Mute')) {
-            util.log('Bingo: ' + message.embeds[0].fields[0].value, 'Mute check', util.logLevel.INFO);
+            let usr = message.guild.members.get(message.embeds[0].fields[0].value.id);
+            if (usr.roles.find(role => _.isEqual(role.name, util.roles.NEW))) {
+                util.log('Bingo: ' + message.embeds[0].fields[0].value, 'Mute check', util.logLevel.INFO);
+            }
         } 
     } 
     // Prefix as first character -> command
@@ -694,6 +697,7 @@ const util = {
 
     'roles': {
         'STAFF': "Staff",
+        'NEW': "Newcomer", 
         'NSFW': "NSFW",
         'MUTED': "Muted",
         'INNOCENT': "Innocent", 
