@@ -320,7 +320,7 @@ client.on("message", (message) => {
         if (message.embeds && message.embeds[0].author && message.embeds[0].author.name.indexOf('Mute')) {
             let usr = message.embeds[0].fields[0].value;
             let usrid = usr.match(/([0-9])+/g);
-            let userM = server.members.get(usrid);
+            let userM = message.guild.members.get(usrid);
             if (userM || 1) {
                 util.log(userM, 'Mute check', util.logLevel.INFO);
             } 
