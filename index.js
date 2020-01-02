@@ -24,7 +24,7 @@ let channels = {
     'charSub': "📃character-submission", 
     'charArchive': "📚character-archive",
     'charIndex': "📕character-index",
-    'reports': "📮requests-and-reports",
+    'reports': "📮reports-and-issues",
     'lfp-info': "📌lfp-info",
     'lfp-contact': "💬lfp-contact",
     'lfp-male': "🍆lfp-male",
