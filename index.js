@@ -319,15 +319,14 @@ client.on("message", (message) => {
     else if (_.isEqual(message.channel.name, "🚨reports-log")) {
         if (message.embeds && message.embeds[0].author && message.embeds[0].author.name.indexOf('Mute')) {
             let usr = message.embeds[0].fields[0].value;
-            let usrid = usr.match(/([0-9])+/g);
-util.log(usrid);
-            let userM = message.guild.members.get('528957906972835850');
-            if (userM || 1) {
-                util.log(userM, 'Mute check', util.logLevel.INFO);
-            } 
-return;
-            if (usr.roles.find(role => _.isEqual(role.name, util.roles.NEW))) {
-                util.log('Bingo: ' + message.embeds[0].fields[0].value, 'Mute check', util.logLevel.INFO);
+            let usrid = usr.match(/([0-9])+/g)[0];
+            let userM = message.guild.members.get(usrid);
+            if (userM && userM.roles.find(role => _.isEqual(role.name, util.roles.NEW))) {
+                util.log('Attempting to kick Muted Newcomer: ' + message.embeds[0].fields[0].value, 'Mute check', util.logLevel.INFO);
+                let reason = "Violating Automoderator chat rules as a Newcomer";
+                userM.kick(reason)
+                    .then(util.log(userM + " kicked for: " + reason, 'Mute check', util.logLevel.INFO))
+                    .catch(util.log(userM + " failed to kick.", 'Mute check', util.logLevel.WARN));
             }
         } 
     } 
