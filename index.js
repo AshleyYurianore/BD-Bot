@@ -322,11 +322,19 @@ client.on("message", (message) => {
             let usrid = usr.match(/([0-9])+/g)[0];
             let userM = message.guild.members.get(usrid);
             if (userM && userM.roles.find(role => _.isEqual(role.name, util.roles.NEW))) {
-                util.log('Attempting to kick Muted Newcomer: ' + message.embeds[0].fields[0].value, 'Mute check', util.logLevel.INFO);
-                let reason = "Violating Automoderator chat rules as a Newcomer";
-                userM.kick(reason)
-                    .then(util.log(userM + " kicked for: " + reason, 'Mute check', util.logLevel.INFO))
-                    .catch(util.log(userM + " failed to kick.", 'Mute check', util.logLevel.WARN));
+                util.log(`Attempting to ban Muted Newcomer: ${message.embeds[0].fields[0].value}`, 'Mute check', util.logLevel.INFO);
+                let options = {
+                    reason: "Violating Automoderator chat rules as a Newcomer",
+                    days: 7
+                };
+                userM.ban(options)
+                    .then(() => {
+                        util.log(`${userM} banned for: ${options.reason}`, 'Mute check', util.logLevel.INFO);
+                        util.sendTextMessage(channels.warnings,
+                            `${userM} banned for: ${options.reason}\n`
+                        );
+                    })
+                    .catch(util.log(`${userM} failed to kick.`, 'Mute check', util.logLevel.WARN));
             }
         } 
     } 
