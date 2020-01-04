@@ -165,7 +165,7 @@ const startUpMod = {
             lfpChannels.push(channels["lfp-trans"]);
             lfpChannels.push(channels["lfp-vanilla"]);
 
-            return;
+
             this.testschedule();
 
         } catch (e) {
@@ -173,8 +173,9 @@ const startUpMod = {
         }
     },
     'testschedule': function () {
-        let j = schedule.scheduleJob('* * * * *', function(fireDate){
-            console.log('This job was supposed to run at ' + fireDate + ', but actually ran at ' + new Date());
+        // Cron-format: second 0-59 optional; minute 0-59; hour 0-23; day of month 1-31; month 1-12; day of week 0-7
+        let j = schedule.scheduleJob('* * *', function(fireDate){
+            util.sendTextMessage(channels.main, `Test Job run at: ${fireDate}`);
         });
     }
 };
