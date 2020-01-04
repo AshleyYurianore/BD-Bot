@@ -666,14 +666,14 @@ const fnct = {
                 if (_.isEqual(reaction.name, "✅")) {
                     channels.charArchive.send(message.content, { files: msgAttachments })
                         .then(msg => {
-                            let msgImages = msg.attachments.map(a => a.url);
+                            let msgImages = msg.attachments.map(a => (`${a.url}\n`));
                             channels.charIndex.send('`r!addchar \"charName\"\n' + message.content +"\n" + msgImages + "`");
                         });
                 } else if (_.isEqual(reaction.name, "⭐")) {
                     let msgContent = "User: " + message.author + "\n" + message.content;
                     channels.charArchive.send(msgContent, { files: msgAttachments })
                         .then(msg => {
-                            let msgImages = msg.attachments.map(a => a.url);
+                            let msgImages = msg.attachments.map(a => (`${a.url}\n`));
                             channels.charIndex.send('`' + message.author + ' Your character has been approved/updated and can be found in the index under " "`');
                             channels.charIndex.send('`r!addchar \"charName\"\n' + message.content +"\n" + msgImages + "`");
                         });
