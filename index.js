@@ -661,23 +661,19 @@ const fnct = {
     'approveChar': function(message, reaction, user) {
         try {
             if (_.isEqual(message.channel.name, channels.charSub.name) && util.isUserStaff(user)) {
+                let mainMessage = _.isEqual(reaction.name, "⭐");
                 let msgAttachments = message.attachments.map(a => a.url);
-                util.log(user + " approved character message:\n" + message.content + "\n" + msgAttachments, `approveCharacter`, util.logLevel.INFO);
-                if (_.isEqual(reaction.name, "✅")) {
-                    channels.charArchive.send(message.content, { files: msgAttachments })
-                        .then(msg => {
-                            let msgImages = msg.attachments.map(a => (`${a.url}\n`));
-                            channels.charIndex.send('`r!addchar \"charName\"\n' + message.content +"\n" + msgImages + "`");
-                        });
-                } else if (_.isEqual(reaction.name, "⭐")) {
-                    let msgContent = "User: " + message.author + "\n" + message.content;
-                    channels.charArchive.send(msgContent, { files: msgAttachments })
-                        .then(msg => {
-                            let msgImages = msg.attachments.map(a => (`${a.url}\n`));
-                            channels.charIndex.send('`' + message.author + ' Your character has been approved/updated and can be found in the index under " "`');
-                            channels.charIndex.send('`r!addchar \"charName\"\n' + message.content +"\n" + msgImages + "`");
-                        });
-                } 
+                let msgImagesString = "";
+                _.each(msgAttachments, imgUrl => msgImagesString += imgUrl + "\n");
+                util.log(`${user} approved character message:\n ${message.content}\n ${msgImagesString}`, "approveCharacter", util.logLevel.INFO);
+                let msgContent = `User: ${message.author}\n ${message.content}`;
+                channels.charArchive.send(mainMessage ? msgContent : message.content, { files: msgAttachments })
+                    .then(msg => {
+                        if (mainMessage) {
+                            channels.charIndex.send(`\`${message.author} Your character has been approved/updated and can be found in the index under \"\"\``);
+                        }
+                        channels.charIndex.send(`\`r!addchar \"charName\"\n ${message.content}\n ${msgImagesString}\``);
+                    });
             }
         } catch (e) {
             util.log(e, 'approveCharacter', util.logLevel.ERROR);
