@@ -175,8 +175,10 @@ const startUpMod = {
     'testschedule': function () {
         // Cron-format: second 0-59 optional; minute 0-59; hour 0-23; day of month 1-31; month 1-12; day of week 0-7
         let j = schedule.scheduleJob('*/60 * * * *', function(fireDate){
-            console.log(fireDate);
-            //util.sendTextMessage(channels.main, `Test Job run at: ${fireDate}`);
+            //console.log(fireDate);
+            util.sendTextMessage(channels.main, `Test Job run at: ${fireDate}`);
+            return;
+            cmd.cn("auto");
         });
     }
 };
@@ -561,7 +563,7 @@ const cmd = {
         }
     },
     'cn': function (message) {
-        if (util.isStaff(message)) {
+        if (util.isStaff(message) || _.isEqual(message, "auto")) {
             let successCount = 0;
             let kickCount = 0;
             let errorCount = 0;
@@ -572,7 +574,7 @@ const cmd = {
                 try {
                     server.member(member).removeRole(newcomerRole)
                         .then((guildMember) => {
-                            if (_.isNull(guildMember.roles.find(role => role.name === "NSFW"))) {
+                            if (_.isNull(guildMember.roles.find(role => role.name === "NSFW")) && ((new Date() - guildMember.joinedAt)/1000/60 > 10)) { // joined more than 10 minutes ago
                                 let reason = guildMember + " kicked from not having NSFW role for a longer period of time.";
                                 guildMember.kick(reason)
                                     .then(util.log(reason, 'clearNewcomer', util.logLevel.INFO))
@@ -699,17 +701,18 @@ const util = {
     },
 
     'isStaff': function (message) {
-        return message.author.lastMessage.member.roles.find(role => _.isEqual(role.name, this.roles.STAFF)) || message.author === AsheN;
+        return message.author.lastMessage.member.roles.find(role => _.isEqual(role.name, this.roles.STAFF) || _.isEqual(role.name, this.roles.TRIALMOD)) || message.author === AsheN;
     },
 
     'isUserStaff': function (user) {
-        let staffRole = server.roles.find(role => role.name === util.roles.STAFF);
+        let staffRole = server.roles.find(role => role.name === util.roles.STAFF || role.name === util.roles.TRIALMOD);
         return server.roles.get(staffRole.id).members.map(m => m.user).filter(staffMember => _.isEqual(staffMember, user)).length > 0;
     }, 
 
     'roles': {
         'STAFF': "Staff",
-        'NEW': "Newcomer", 
+        'TRIALMOD': "Trial-Moderator",
+        'NEW': "Newcomer",
         'NSFW': "NSFW",
         'MUTED': "Muted",
         'INNOCENT': "Innocent", 
@@ -721,8 +724,12 @@ const util = {
         'LVL_20': "Slut (Lvl 20+)",
         'LVL_30': "Whore (Lvl 30+)",
         'LVL_40': "Cumdump (Lvl 40+)",
-        'LVL_50': "Pormstar (Lvl 50+)",
+        'LVL_50': "Pornstar (Lvl 50+)",
         'LVL_60': "Sex-Toy (Lvl 60+)",
+        'LVL_70': "Server Bus (Lvl 70+)",
+        'LVL_80': "Doesn't leave bed (Lvl 80+)",
+        'LVL_90': "Sperm Bank (Lvl 90+)",
+        'LVL_100': "Retired Pornstar (Lvl 100+)",
     },
 
     'reportToAsheN': function (errMsg) {
