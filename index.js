@@ -174,8 +174,9 @@ const startUpMod = {
     },
     'testschedule': function () {
         // Cron-format: second 0-59 optional; minute 0-59; hour 0-23; day of month 1-31; month 1-12; day of week 0-7
-        let j = schedule.scheduleJob('* * *', function(fireDate){
-            util.sendTextMessage(channels.main, `Test Job run at: ${fireDate}`);
+        let j = schedule.scheduleJob('*/60 * * * *', function(fireDate){
+            console.log(fireDate);
+            //util.sendTextMessage(channels.main, `Test Job run at: ${fireDate}`);
         });
     }
 };
