@@ -666,13 +666,13 @@ const fnct = {
                 let msgImagesString = "";
                 _.each(msgAttachments, imgUrl => msgImagesString += imgUrl + "\n");
                 util.log(`${user} approved character message:\n ${message.content}\n ${msgImagesString}`, "approveCharacter", util.logLevel.INFO);
-                let msgContent = `User: ${message.author}\n ${message.content}`;
+                let msgContent = `User: ${message.author}\n${message.content}`;
                 channels.charArchive.send(mainMessage ? msgContent : message.content, { files: msgAttachments })
                     .then(msg => {
                         if (mainMessage) {
                             channels.charIndex.send(`\`${message.author} Your character has been approved/updated and can be found in the index under \"\"\``);
                         }
-                        channels.charIndex.send(`\`r!addchar \"charName\"\n ${message.content}\n ${msgImagesString}\``);
+                        channels.charIndex.send(`\`r!addchar \"charName\"\n${message.content}\n${msgImagesString}\``);
                     });
             }
         } catch (e) {
