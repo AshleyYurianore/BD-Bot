@@ -166,6 +166,7 @@ const startUpMod = {
             lfpChannels.push(channels["lfp-vanilla"]);
 
 
+            cmd.cn("auto");
             this.testschedule();
 
         } catch (e) {
@@ -175,9 +176,6 @@ const startUpMod = {
     'testschedule': function () {
         // Cron-format: second 0-59 optional; minute 0-59; hour 0-23; day of month 1-31; month 1-12; day of week 0-7
         let j = schedule.scheduleJob('*/60 * * * *', function(fireDate){
-            //console.log(fireDate);
-            util.sendTextMessage(channels.main, `Test Job run at: ${fireDate}`);
-            return;
             cmd.cn("auto");
         });
     }
@@ -563,7 +561,7 @@ const cmd = {
         }
     },
     'cn': function (message) {
-        if (util.isStaff(message) || _.isEqual(message, "auto")) {
+        if (_.isEqual(message, "auto") || util.isStaff(message)) {
             let successCount = 0;
             let kickCount = 0;
             let errorCount = 0;
@@ -586,7 +584,7 @@ const cmd = {
                             if (index+1 === newcomerMembers.length) {
                                 let logText = successCount + '/' + (successCount + errorCount) + " users cleared of Newcomer role. " + kickCount + " users kicked from not having the NSFW role until now.";
                                 util.log(logText, 'clearNewcomer', util.logLevel.INFO);
-                                message.channel.send(logText);
+                                util.sendTextMessage(channels.main, logText);
                             }
                         });
                 } catch (e) {
@@ -597,7 +595,7 @@ const cmd = {
                         util.log(logText, 'clearNewcomer', util.logLevel.INFO);
                         message.channel.send(logText);
                     }
-                };
+                }
             });
             if (newcomerMembers.length === 0) {
                 message.channel.send("0" + responseText);
