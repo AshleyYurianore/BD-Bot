@@ -591,14 +591,14 @@ const cmd = {
                     errorCount++;
                     util.log("Couldn't remove Newcomer from: " + member + "\n" + e, 'clearNewcomer', util.logLevel.ERROR);
                     if (index+1 === newcomerMembers.length) {
-                        let logText = successCount + '/' + (successCount + errorCount) + responseText;
+                        let logText = successCount + '/' + (successCount + errorCount) + " users cleared of Newcomer role. " + kickCount + " users kicked from not having the NSFW role until now.";
                         util.log(logText, 'clearNewcomer', util.logLevel.INFO);
                         message.channel.send(logText);
                     }
                 }
             });
             if (newcomerMembers.length === 0) {
-                message.channel.send("0" + responseText);
+                message.channel.send("0" + " Newcomers found.");
             } 
         } 
     },
