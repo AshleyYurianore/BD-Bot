@@ -649,7 +649,6 @@ const fnct = {
                 case 'age':
                     channel = "606773822284365874";
                     let age = Math.floor((new Date() - server.createdAt) / 1000 / 60 / 60 / 24);
-                    age = 366;
                     let ageDays = age % 365;
                     let ageDstr = `${ageDays > 0 ? ageDays + (ageDays > 1 ? ' days' : ' day') : '0 days'}`;
                     let ageYears = Math.floor(age / 365);
