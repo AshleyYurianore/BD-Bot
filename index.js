@@ -338,8 +338,8 @@ client.on("message", (message) => {
                     })
                     .catch(util.log(`${userM} failed to kick.`, 'Mute check', util.logLevel.WARN));
             }
-        } 
-    } 
+        }
+    }
     // Prefix as first character -> command
     else if (_.isEqual(message.content.indexOf(prefix), 0)) {
         cmd.call(message);
@@ -599,8 +599,26 @@ const cmd = {
             });
             if (newcomerMembers.length === 0) {
                 message.channel.send("0" + " Newcomers found.");
-            } 
-        } 
+            }
+        }
+    },
+    'ancient': function(message) {
+        return;
+        if (util.isStaff(message)) {
+            let ancientTimeThreshold = new Date(server.createdTimestamp + (new Date() - server.createdTimestamp) / 5);
+            util.sendTextMessage(message.channel, `Threshold for "Ancient Member" is at: ${ancientTimeThreshold.toString()}`);
+
+            let ancientMembers = server.members.filter(m => {
+                return (m.joinedTimestamp <= ancientTimeThreshold) && (!m.user.bot) && _.isNull(m.roles.find(r => _.isEqual(r.name, util.roles.ANCIENT)));
+            });
+
+            ancientMembers.forEach(member => {
+                member.addRole(server.roles.find(role => _.isEqual(role.name, util.roles.ANCIENT))).then();
+                console.log(member.user.username + ", last message: " + (!_.isNull(member.lastMessage) ? member.lastMessage.createdAt : " too old"));
+            });
+        } else {
+            util.sendTextMessage(message.channel, "Shoo! You don't have permissions for that!");
+        }
     },
     'call': async function (message) {
         const args = message.content.slice(prefix.length).trim().split(/ +/g);
@@ -668,15 +686,18 @@ const fnct = {
     'approveChar': function(message, reaction, user) {
         try {
             if (_.isEqual(message.channel.name, channels.charSub.name) && util.isUserStaff(user)) {
-                let mainMessage = _.isEqual(reaction.name, "⭐");
+                let msgType = _.isEqual(reaction.name, "⭐") ? 1 : _.isEqual(reaction.name, "✅") ? 2 : 0;
+                if (msgType === 0) {
+                    return;
+                }
                 let msgAttachments = message.attachments.map(a => a.url);
                 let msgImagesString = "";
                 _.each(msgAttachments, imgUrl => msgImagesString += imgUrl + "\n");
                 util.log(`${user} approved character message:\n ${message.content}\n ${msgImagesString}`, "approveCharacter", util.logLevel.INFO);
                 let msgContent = `User: ${message.author}\n${message.content}`;
-                channels.charArchive.send(mainMessage ? msgContent : message.content, { files: msgAttachments })
+                channels.charArchive.send(msgType === 1 ? msgContent : message.content, { files: msgAttachments })
                     .then(msg => {
-                        if (mainMessage) {
+                        if (msgType === 1) {
                             channels.charIndex.send(`\`${message.author} Your character has been approved/updated and can be found in the index under \"\"\``);
                         }
                         channels.charIndex.send(`\`r!addchar \"charName\"\n${message.content}\n${msgImagesString}\``);
@@ -715,6 +736,7 @@ const util = {
     'roles': {
         'STAFF': "Staff",
         'TRIALMOD': "Trial-Moderator",
+        'ANCIENT': "💠Ancient Member",
         'NEW': "Newcomer",
         'NSFW': "NSFW",
         'MUTED': "Muted",
