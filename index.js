@@ -250,10 +250,8 @@ client.on("message", (message) => {
     if (message.channel.type == "text" && message.channel.name.includes("lfp-")) {
         const number_of_attached_images = message.attachments.filter((embed) => embed.height ? true : false).size;
         if (image_link_count(message.content) + number_of_attached_images > 3) {
-            const lfp_info = message.guild.channels.find(channel => channel.name == channels["lfp-info"]);
-            const lfp_contact = message.guild.channels.find(channel => channel.name == channels["lfp-contact"]);
-            util.sendTextMessage(lfp_contact, `your Looking For Partner ad in ${message.channel} contains more than 3 images.
-Please edit it to comply with the rules as described in ${lfp_info}.Thanks! :heart:`, {"reply": message.author});
+            util.sendTextMessage(channels["lfp-contact"], `your Looking For Partner ad in ${message.channel} contains more than 3 images.
+Please edit it to comply with the rules as described in ${channels["lfp-info"]}.Thanks! :heart:`, {"reply": message.author});
         }
     }
     
