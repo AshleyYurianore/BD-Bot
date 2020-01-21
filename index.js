@@ -252,6 +252,7 @@ client.on("message", (message) => {
         if (image_link_count(message.content) + number_of_attached_images > 3) {
             util.sendTextMessage(channels["lfp-contact"], `your Looking For Partner ad in ${message.channel} contains more than 3 images.
 Please edit it to comply with the rules as described in ${channels["lfp-info"]}.Thanks! :heart:`, {"reply": message.author});
+            util.log(`Warned ${message.author} for sending more than 3 images in LFP ad <${message.url}>`, "lfpInfo", util.logLevel.WARN);
         }
     }
     
