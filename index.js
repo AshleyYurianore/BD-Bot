@@ -561,7 +561,6 @@ const cmd = {
         }
     },
     'cn': function (message) {
-        return;
         if (_.isEqual(message, "auto") || util.isStaff(message)) {
             let successCount = 0;
             let kickCount = 0;
