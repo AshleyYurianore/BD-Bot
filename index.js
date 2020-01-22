@@ -570,6 +570,9 @@ const cmd = {
             _.each(newcomerMembers, (member, index) => {
             util.log(" Clearing newcomer role from: " + member + " (" + (index+1) + "/" + newcomerMembers.length + ")", "clearNewcomer", util.logLevel.INFO);
                 try {
+                    if ((new Date() - member.joinedAt)/1000/60 <= 10) { // joined less than 10 minutes ago
+                        return;
+                    }
                     server.member(member).removeRole(newcomerRole)
                         .then((guildMember) => {
                             if (_.isNull(guildMember.roles.find(role => role.name === "NSFW")) && ((new Date() - guildMember.joinedAt)/1000/60 > 10)) { // joined more than 10 minutes ago
