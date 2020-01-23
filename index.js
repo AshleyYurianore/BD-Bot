@@ -254,6 +254,26 @@ client.on("message", (message) => {
 Please edit it to comply with the rules as described in ${channels["lfp-info"]}.Thanks! :heart:`);
             util.log(`Warned ${message.author} for sending more than 3 images in LFP ad <${message.url}>`, "lfpInfo", util.logLevel.WARN);
         }
+        //warn users who post too fast
+        message.channel.fetchMessages({"before": message.id, "limit": 100})
+        .then(messages => {
+            if (!messages.isEmpty) {
+                const previous_message = messages.reduce((m1, m2) => {
+                    if (m1.author.id != m2.author.id) {
+                        return m1;
+                    }
+                    return m1.createdTimestamp > m2.createdTimestamp ? m1 : m2;
+                }, {"author": message.author, "createdTimestamp": 0});
+                if (previous_message.createdTimestamp != 0) {
+                    const time_passed_s = ~~((message.createdTimestamp - previous_message.createdTimestamp) / 1000);
+                    if (time_passed_s < 60 * 60 * 4) {
+                        util.sendTextMessage(channels["lfp-contact"], `${message.author}, your Looking For Partner ad in ${message.channel} was sent too fast (after ${~~(time_passed_s / 3600)} hours and ${~~((time_passed_s % 3600) / 60)} minutes).
+Please wait at least 4 hours before sending another ad as described in ${channels["lfp-info"]}. Thanks! :heart:`);
+                    }
+                }
+            }
+        })
+        .catch(console.error);
     }
     
     if (message.isMentioned(client.user)) {
