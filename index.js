@@ -246,7 +246,7 @@ client.on("message", (message) => {
     if (!message.channel.guild) return;
     if (lockdown) return;
     
-    if (message.channel.name.includes("lfp-")) {
+    if (lfpChannels.includes(message.channel)) {
         //warn users who post more than 3 images in an LFP channel
         const number_of_attached_images = message.attachments.filter((embed) => embed.height ? true : false).size;
         if (image_link_count(message.content) + number_of_attached_images > 3) {
