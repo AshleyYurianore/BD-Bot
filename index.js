@@ -269,6 +269,9 @@ Please edit it to comply with the rules as described in ${channels["lfp-info"]}.
                     if (time_passed_s < 60 * 60 * 4) {
                         util.sendTextMessage(channels["lfp-contact"], `${message.author}, your Looking For Partner ad in ${message.channel} was sent too fast (after ${~~(time_passed_s / 3600)} hours and ${~~((time_passed_s % 3600) / 60)} minutes).
 Please wait at least 4 hours before sending another ad as described in ${channels["lfp-info"]}. Thanks! :heart:`);
+                        util.log(`Warned ${message.author} for sending LFP ads too fast (after ${~~(time_passed_s / 3600)}h ${~~((time_passed_s % 3600) / 60)}m):
+Current message: <${message.url}>
+Previous message: <${previous_message.url}>`, "lfpInfo", util.logLevel.WARN);
                     }
                 }
             }
