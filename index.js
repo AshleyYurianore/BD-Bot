@@ -256,8 +256,9 @@ client.on("message", (message) => {
         message.channel.fetchMessages({ "before": message.id, "limit": 100 })
             .then(messages => {
                 let time_passed_s = 0;
+                let previous_message;
                 if (_.isEmpty(messages)) {
-                    const previous_message = messages.reduce((m1, m2) => {
+                    previous_message = messages.reduce((m1, m2) => {
                         if (!_.isEqual(m1.author.id, m2.author.id)) return m1;
                         return m1.createdTimestamp > m2.createdTimestamp ? m1 : m2;
                     }, { "author": message.author, "createdTimestamp": 0 });
@@ -269,17 +270,27 @@ client.on("message", (message) => {
                         }
                     }
                 }
-                let warnMsg = `${message.author}, your Looking For Partner ad in ${message.channel} `;
-                // let warnMsg = `${message.author}, your Looking For Partner ad in ${message.channel} was sent too fast (after ${~~(time_passed_s / 3600)} hours and ${~~((time_passed_s % 3600) / 60)} minutes).` +
-                //
-                if (violationMode === 1) { warnMsg += `contains more than 3 images.`; }
-                if (violationMode === 2) { warnMsg += `was sent too fast (after ${~~(time_passed_s / 3600)} hours and ${~~((time_passed_s % 3600) / 60)} minutes).`; }
-                if (violationMode === 3) { warnMsg += `contains more than 3 images AND was sent too fast (after ${~~(time_passed_s / 3600)} hours and ${~~((time_passed_s % 3600) / 60)} minutes).`; }
-                warnMsg += `\nPlease follow the guidelines as described in ${channels["lfp-info"]}. Thanks! :heart:`;
-                if (violationMode !== 0) {
-                    util.sendTextMessage(channels["lfp-contact"], warnMsg);
-                    util.log(warnMsg, "lfpAdViolation", util.logLevel.INFO);
+                if (violationMode === 0) {
+                    return;
                 }
+
+                let warnMsg = `${message.author}, your Looking For Partner ad in ${message.channel} `;
+                let reason = "";
+                if (violationMode === 1) { reason = `contains more than 3 images.`; }
+                if (violationMode === 2) { reason = `was sent too fast (after ${~~(time_passed_s / 3600)} hours and ${~~((time_passed_s % 3600) / 60)} minutes).`; }
+                if (violationMode === 3) { reason = `contains more than 3 images AND was sent too fast (after ${~~(time_passed_s / 3600)} hours and ${~~((time_passed_s % 3600) / 60)} minutes).`; }
+
+                message.react('❌')
+                    .then() // react success
+                    .catch(e => {
+                        util.sendTextMessage(channels.main, `HALP, I cannot warn ${message.author} for violating the LFP rules in ${message.channel}! Their ad ${reason}\n` +
+                            `Violating Message Link: ${message.url}\n` +
+                            `Previous Message Link: ${previous_message.url}`);
+                    });
+
+                warnMsg += `${reason} \nPlease follow the guidelines as described in ${channels["lfp-info"]}. Thanks! :heart:`;
+                util.sendTextMessage(channels["lfp-contact"], warnMsg);
+                util.log(`${message.author}'s lfp ad in ${message.channel} ${reason}`, "lfpAdViolation", util.logLevel.INFO);
             })
             .catch(e => {
                 util.log('Failed: ' + e.toString(), 'lfpAdViolation', util.logLevel.WARN);
