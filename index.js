@@ -46,7 +46,8 @@ let AsheN;
 let lockdown = false;
 let disableMentions = true;
 let ongoingProcess = false;
-
+const dont_ping_role_id = "587756942395703306";
+let ping_angry_emoji;
 
 const dbMod = {
     'warnUser': function (member, level, warner, reason) {
@@ -140,6 +141,7 @@ const startUpMod = {
                 channels[channelID] = server.channels.find(ch => _.isEqual(ch.name, channels[channelID]));
             });
             AsheN = client.users.find(user => _.isEqual(user.id, "528957906972835850")); //"105301872818028544"));
+            ping_angry_emoji = server.emojis.get("535558794764222476");
             client.user.setActivity("Serving the Den").catch(util.reportToAsheN);
             util.sendTextMessage(channels.main, startUpMessage);
             util.log("INITIALIZED.", "Startup", util.logLevel.INFO);
@@ -278,6 +280,17 @@ Previous message: <${previous_message.url}>`, "lfpInfo", util.logLevel.WARN);
         })
         .catch(console.error);
     }
+
+    //react with :pingangry: to users who mention someone with the Don't Ping role
+    message.mentions.members.find(member => {
+        if (member.roles.has(dont_ping_role_id)) {
+            message.react(ping_angry_emoji)
+                .then(reaction => util.log(`Reacted to ${message.author} <${message.url}> with ${ping_angry_emoji}.`, "Ping role violation", util.logLevel.INFO))
+                .catch(error => util.log(`Failed reacting to ${message.author} <${message.url}> with ${ping_angry_emoji}.`, "Ping role violation", util.logLevel.WARN));
+            return true;
+        }
+        return false;
+    });
     
     if (message.isMentioned(client.user)) {
         const args = message.content.trim().split(/ +/g).splice(1);
