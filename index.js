@@ -276,8 +276,10 @@ client.on("message", (message) => {
                 if (violationMode === 2) { warnMsg += `was sent too fast (after ${~~(time_passed_s / 3600)} hours and ${~~((time_passed_s % 3600) / 60)} minutes).`; }
                 if (violationMode === 3) { warnMsg += `contains more than 3 images AND was sent too fast (after ${~~(time_passed_s / 3600)} hours and ${~~((time_passed_s % 3600) / 60)} minutes).`; }
                 warnMsg += `\nPlease follow the guidelines as described in ${channels["lfp-info"]}. Thanks! :heart:`;
-                util.sendTextMessage(channels["lfp-contact"], warnMsg);
-                util.log(warnMsg, "lfpAdViolation", util.logLevel.INFO);
+                if (violationMode !== 0) {
+                    util.sendTextMessage(channels["lfp-contact"], warnMsg);
+                    util.log(warnMsg, "lfpAdViolation", util.logLevel.INFO);
+                }
             })
             .catch(e => {
                 util.log('Failed: ' + e.toString(), 'lfpAdViolation', util.logLevel.WARN);
