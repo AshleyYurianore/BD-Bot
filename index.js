@@ -47,7 +47,8 @@ let lockdown = false;
 let disableMentions = true;
 let ongoingProcess = false;
 const dont_ping_role_id = "587756942395703306";
-let ping_angry_emoji;
+//let ping_violation_reaction_emoji = "535558794764222476"; //:pingangry:
+let ping_violation_reaction_emoji = "670647474784043028"; //:pingmad:
 
 const dbMod = {
     'warnUser': function (member, level, warner, reason) {
@@ -141,7 +142,7 @@ const startUpMod = {
                 channels[channelID] = server.channels.find(ch => _.isEqual(ch.name, channels[channelID]));
             });
             AsheN = client.users.find(user => _.isEqual(user.id, "528957906972835850")); //"105301872818028544"));
-            ping_angry_emoji = server.emojis.get("535558794764222476");
+            ping_violation_reaction_emoji = server.emojis.get(ping_violation_reaction_emoji);
             client.user.setActivity("Serving the Den").catch(util.reportToAsheN);
             util.sendTextMessage(channels.main, startUpMessage);
             util.log("INITIALIZED.", "Startup", util.logLevel.INFO);
@@ -238,10 +239,6 @@ client.on('raw', packet => {
     });
 });
 
-const image_link_count = (message_string) => {
-    return (message_string.toUpperCase().match(/\.PNG|\.JPG|\.JPEG|\.TIFF|\.BMP|\.PPM|\.PGM|\.PBM|\.PNM|\.WEBP|\.SVG|\.GIF/g) || []).length;
-}
-
 client.on("message", (message) => {
     if (_.isEqual(message.author.username, client.user.username)) return;
     if (message.author.bot && !((_.isEqual(message.author.id, "159985870458322944") && _.isEqual(message.channel.name, "📈level-up-log")) || (_.isEqual(message.author.id, "155149108183695360") && _.isEqual(message.channel.name, "🚨reports-log")))) return;
@@ -251,7 +248,7 @@ client.on("message", (message) => {
     if (lfpChannels.includes(message.channel)) {
         //warn users who post more than 3 images in an LFP channel
         const number_of_attached_images = message.attachments.filter((embed) => embed.height ? true : false).size;
-        if (image_link_count(message.content) + number_of_attached_images > 3) {
+        if (util.image_link_count(message.content) + number_of_attached_images > 3) {
             util.sendTextMessage(channels["lfp-contact"], `${message.author}, your Looking For Partner ad in ${message.channel} contains more than 3 images.
 Please edit it to comply with the rules as described in ${channels["lfp-info"]}.Thanks! :heart:`);
             util.log(`Warned ${message.author} for sending more than 3 images in LFP ad <${message.url}>`, "lfpInfo", util.logLevel.WARN);
@@ -282,15 +279,22 @@ Previous message: <${previous_message.url}>`, "lfpInfo", util.logLevel.WARN);
     }
 
     //react with :pingangry: to users who mention someone with the Don't Ping role
-    (message.mentions.members || []).find(member => {
-        if (member.roles.has(dont_ping_role_id)) {
-            message.react(ping_angry_emoji)
-                .then(reaction => util.log(`Reacted to ${message.author} <${message.url}> with ${ping_angry_emoji}.`, "Ping role violation", util.logLevel.INFO))
-                .catch(error => util.log(`Failed reacting to ${message.author} <${message.url}> with ${ping_angry_emoji}.`, "Ping role violation", util.logLevel.WARN));
-            return true;
+    const no_ping_mentions = (message.mentions.members || new Map()).filter(member => member.roles.has(dont_ping_role_id));
+    if (no_ping_mentions.size > 0) {
+        console.log(`${message.author} | ${no_ping_mentions.first()}`);
+        console.log(`no ping mentions size: ${no_ping_mentions.size}, message author ID: ${message.author.id}, no_ping_mentions.first: ${no_ping_mentions.first().id}`);
+        const selfping = no_ping_mentions.size == 1 && message.author.id == no_ping_mentions.first().id;
+        const no_ping_mentions_string = no_ping_mentions.reduce((prev_member, next_member) => prev_member + `${next_member} `, "");
+        const log_message = `${message.author}'s message pinging ${no_ping_mentions_string}having <@&${dont_ping_role_id}> in message <${message.url}> with ${ping_violation_reaction_emoji}`;
+        if (message.author.bot || is_staff(message.author) || selfping) { //but exclude bots, staff and self-pings
+            util.log(`Didn't react to ${log_message} because it's ${selfping ? "a self ping" : message.author.bot ? "from a bot" : "from staff"}.`, "Ping role violation", util.logLevel.INFO)
         }
-        return false;
-    });
+        else {
+            message.react(ping_violation_reaction_emoji)
+                .then(reaction => util.log(`Reacted to ${log_message}.`, "Ping role violation", util.logLevel.INFO))
+                .catch(error => util.log(`Failed reacting to ${log_message}.`, "Ping role violation", util.logLevel.WARN));
+        }
+    }
     
     if (message.isMentioned(client.user)) {
         const args = message.content.trim().split(/ +/g).splice(1);
@@ -855,6 +859,10 @@ const util = {
         'WARN':  "WARN",
         'ERROR': "**ERROR**",
         'FATAL': "__**FATAL**__",
+    },
+
+    'image_link_count': function (message_string) {
+        return (message_string.toUpperCase().match(/\.PNG|\.JPG|\.JPEG|\.TIFF|\.BMP|\.PPM|\.PGM|\.PBM|\.PNM|\.WEBP|\.SVG|\.GIF/g) || []).length;
     }
 };
 
