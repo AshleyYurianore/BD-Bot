@@ -813,6 +813,21 @@ const util = {
         'LVL_80': "Doesn't leave bed (Lvl 80+)",
         'LVL_90': "Sperm Bank (Lvl 90+)",
         'LVL_100': "Retired Pornstar (Lvl 100+)",
+        'LFP_BANNED': "Banned from LFP",
+        'lfp': {
+            'VANILLA': "Vanilla",
+            'BI': "Bi/Pansexuual",
+            'GAY': "Gay",
+            'LESBIAN': "Lesbian",
+            'FUTA': "Futa",
+            'RPFUTA': "RP with Futas",
+            'FURRY': "Furry",
+            'RPFURRY': "RP with Furries",
+            'BEAST': "Beast",
+            'HYBRID': "Hybrid",
+            'RPBEAST': "RP with Beasts",
+            'EXTREME': "Extreme",
+        }
     },
 
     'reportToAsheN': function (errMsg) {
