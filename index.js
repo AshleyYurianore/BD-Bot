@@ -282,7 +282,7 @@ Previous message: <${previous_message.url}>`, "lfpInfo", util.logLevel.WARN);
     }
 
     //react with :pingangry: to users who mention someone with the Don't Ping role
-    message.mentions.members.find(member => {
+    (message.mentions.members || []).find(member => {
         if (member.roles.has(dont_ping_role_id)) {
             message.react(ping_angry_emoji)
                 .then(reaction => util.log(`Reacted to ${message.author} <${message.url}> with ${ping_angry_emoji}.`, "Ping role violation", util.logLevel.INFO))
