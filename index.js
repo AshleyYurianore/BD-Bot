@@ -299,9 +299,7 @@ client.on("message", (message) => {
     if (!_.isEqual(message.author.id, 159985870458322944) && message.mentions.members.size) {
         // react with :pingangry: to users who mention someone with the Don't Ping role
         let dontPingRole = server.roles.find(r => _.isEqual(r.name, util.roles.DONTPING));
-        const no_ping_mentions = message.mentions.members.filter(member => {
-            return (member.roles.has(dontPingRole.id) && !_.isEqual(member.user, message.author));
-        });
+        const no_ping_mentions = message.mentions.members.filter(member => (member.roles.has(dontPingRole.id) && !_.isEqual(member.user, message.author)));
         if (no_ping_mentions.size === 0) {
             return;
         }
