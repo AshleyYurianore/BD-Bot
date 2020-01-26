@@ -249,8 +249,8 @@ client.on("message", (message) => {
         //warn users who post more than 3 images in an LFP channel
         const number_of_attached_images = message.attachments.filter((embed) => embed.height ? true : false).size;
         if (util.image_link_count(message.content) + number_of_attached_images > 3) {
-            util.sendTextMessage(channels["lfp-contact"], `${message.author}, your Looking For Partner ad in ${message.channel} contains more than 3 images.
-Please edit it to comply with the rules as described in ${channels["lfp-info"]}.Thanks! :heart:`);
+            util.sendTextMessage(channels["lfp-contact"], `${message.author}, your Looking For Partner ad in ${message.channel} contains more than 3 images.\n` +
+            `Please edit it to comply with the rules as described in ${channels["lfp-info"]}.Thanks! :heart:`);
             util.log(`Warned ${message.author} for sending more than 3 images in LFP ad <${message.url}>`, "lfpInfo", util.logLevel.WARN);
         }
         //warn users who post too fast
@@ -266,11 +266,13 @@ Please edit it to comply with the rules as described in ${channels["lfp-info"]}.
                 if (previous_message.createdTimestamp != 0) {
                     const time_passed_s = ~~((message.createdTimestamp - previous_message.createdTimestamp) / 1000);
                     if (time_passed_s < 60 * 60 * 4) {
-                        util.sendTextMessage(channels["lfp-contact"], `${message.author}, your Looking For Partner ad in ${message.channel} was sent too fast (after ${~~(time_passed_s / 3600)} hours and ${~~((time_passed_s % 3600) / 60)} minutes).
-Please wait at least 4 hours before sending another ad as described in ${channels["lfp-info"]}. Thanks! :heart:`);
-                        util.log(`Warned ${message.author} for sending LFP ads too fast (after ${~~(time_passed_s / 3600)}h ${~~((time_passed_s % 3600) / 60)}m):
-Current message: <${message.url}>
-Previous message: <${previous_message.url}>`, "lfpInfo", util.logLevel.WARN);
+                        util.sendTextMessage(channels["lfp-contact"],
+                            `${message.author}, your Looking For Partner ad in ${message.channel} was sent too fast ` +
+                            `(after ${~~(time_passed_s / 3600)} hours and ${~~((time_passed_s % 3600) / 60)} minutes).\n` +
+                            `Please wait at least 4 hours before sending another ad as described in ${channels["lfp-info"]}. Thanks! :heart:`);
+                        util.log(`Warned ${message.author} for sending LFP ads too fast (after ${~~(time_passed_s / 3600)}h ${~~((time_passed_s % 3600) / 60)}m):\n` +
+                            `Current message: <${message.url}>\n` +
+                            `Previous message: <${previous_message.url}>`, "lfpInfo", util.logLevel.WARN);
                     }
                 }
             }
