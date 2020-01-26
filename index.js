@@ -247,7 +247,7 @@ client.on("message", (message) => {
     if (lfpChannels.includes(message.channel)) {
         let number_of_attached_images = message.attachments.filter(embed => !!embed.height).size;
         let violationMode = 0;
-        if ((image_link_count(message.content) + number_of_attached_images) > 3) { // check for msg which have >3 images in any LFP channel
+        if ((util.image_link_count(message.content) + number_of_attached_images) > 3) { // check for msg which have >3 images in any LFP channel
             violationMode = 1;
         }
         //warn users who post too fast
