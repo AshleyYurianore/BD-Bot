@@ -286,7 +286,7 @@ client.on("message", (message) => {
         const selfping = no_ping_mentions.size == 1 && message.author.id == no_ping_mentions.first().id;
         const no_ping_mentions_string = no_ping_mentions.reduce((prev_member, next_member) => prev_member + `${next_member} `, "");
         const log_message = `${message.author}'s message pinging ${no_ping_mentions_string}having <@&${dont_ping_role_id}> in message <${message.url}> with ${ping_violation_reaction_emoji}`;
-        if (message.author.bot || util.isStaff(message.author) || selfping) { //but exclude bots, staff and self-pings
+        if (message.author.bot || util.isStaff(message) || selfping) { //but exclude bots, staff and self-pings
             util.log(`Didn't react to ${log_message} because it's ${selfping ? "a self ping" : message.author.bot ? "from a bot" : "from staff"}.`, "Ping role violation", util.logLevel.INFO)
         }
         else {
