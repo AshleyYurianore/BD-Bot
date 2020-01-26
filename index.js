@@ -283,8 +283,6 @@ client.on("message", (message) => {
     //react with :pingangry: to users who mention someone with the Don't Ping role
     const no_ping_mentions = (message.mentions.members || new DiscordJS.Collection()).filter(member => member.roles.has(dont_ping_role_id));
     if (no_ping_mentions.size > 0) {
-        console.log(`${message.author} | ${no_ping_mentions.first()}`);
-        console.log(`no ping mentions size: ${no_ping_mentions.size}, message author ID: ${message.author.id}, no_ping_mentions.first: ${no_ping_mentions.first().id}`);
         const selfping = no_ping_mentions.size == 1 && message.author.id == no_ping_mentions.first().id;
         const no_ping_mentions_string = no_ping_mentions.reduce((prev_member, next_member) => prev_member + `${next_member} `, "");
         const log_message = `${message.author}'s message pinging ${no_ping_mentions_string}having <@&${dont_ping_role_id}> in message <${message.url}> with ${ping_violation_reaction_emoji}`;
