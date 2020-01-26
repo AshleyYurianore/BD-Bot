@@ -279,7 +279,7 @@ Previous message: <${previous_message.url}>`, "lfpInfo", util.logLevel.WARN);
     }
 
     //react with :pingangry: to users who mention someone with the Don't Ping role
-    const no_ping_mentions = (message.mentions.members || new Map()).filter(member => member.roles.has(dont_ping_role_id));
+    const no_ping_mentions = (message.mentions.members || new DiscordJS.Collection()).filter(member => member.roles.has(dont_ping_role_id));
     if (no_ping_mentions.size > 0) {
         console.log(`${message.author} | ${no_ping_mentions.first()}`);
         console.log(`no ping mentions size: ${no_ping_mentions.size}, message author ID: ${message.author.id}, no_ping_mentions.first: ${no_ping_mentions.first().id}`);
