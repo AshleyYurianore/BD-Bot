@@ -300,20 +300,18 @@ client.on("message", (message) => {
         // react with :pingangry: to users who mention someone with the Don't Ping role
         let dontPingRole = server.roles.find(r => _.isEqual(r.name, util.roles.DONTPING));
         const no_ping_mentions = message.mentions.members.filter(member => (member.roles.has(dontPingRole.id) && !_.isEqual(member.user, message.author)));
-        if (no_ping_mentions.size === 0) {
-            return;
-        }
-
-        const no_ping_mentions_string = no_ping_mentions.reduce((prev_member, next_member) => prev_member + `${next_member} `, "");
-        const log_message = `${message.author} pinged people with <@&${ dontPingRole.id }>:\n${no_ping_mentions_string}\nMessage Link: <${message.url}>`;
-        if (!util.isUserStaff(message.author)) { // exclude staff
-            util.log(log_message, "Ping role violation", util.logLevel.INFO);
-            message.react(ping_violation_reaction_emoji)
-                .catch(error => {
-                    util.log(`Failed reacting to <${message.url}>`, "Ping role violation", util.logLevel.WARN);
-                    util.sendTextMessage(channels.main, `HALP, I'm blocked by ${message.author}!\n`+
-                        `They pinged people with the <@&${ dontPingRole.id }> role!\nMessage Link: <${message.url}>`);
-                });
+        if (no_ping_mentions.size !== 0) {
+            const no_ping_mentions_string = no_ping_mentions.reduce((prev_member, next_member) => prev_member + `${next_member} `, "");
+            const log_message = `${message.author} pinged people with <@&${dontPingRole.id}>:\n${no_ping_mentions_string}\nMessage Link: <${message.url}>`;
+            if (!util.isUserStaff(message.author)) { // exclude staff
+                util.log(log_message, "Ping role violation", util.logLevel.INFO);
+                message.react(ping_violation_reaction_emoji)
+                    .catch(error => {
+                        util.log(`Failed reacting to <${message.url}>`, "Ping role violation", util.logLevel.WARN);
+                        util.sendTextMessage(channels.main, `HALP, I'm blocked by ${message.author}!\n` +
+                            `They pinged people with the <@&${dontPingRole.id}> role!\nMessage Link: <${message.url}>`);
+                    });
+            }
         }
     }
 
@@ -380,6 +378,18 @@ client.on("message", (message) => {
                 } else if (level === 60) {
                     lvlRoleAdd = util.roles.LVL_60;
                     lvlRoleRemove = util.roles.LVL_50;
+                } else if (level === 70) {
+                    lvlRoleAdd = util.roles.LVL_70;
+                    lvlRoleRemove = util.roles.LVL_60;
+                } else if (level === 80) {
+                    lvlRoleAdd = util.roles.LVL_80;
+                    lvlRoleRemove = util.roles.LVL_70;
+                } else if (level === 90) {
+                    lvlRoleAdd = util.roles.LVL_90;
+                    lvlRoleRemove = util.roles.LVL_90;
+                } else if (level === 100) {
+                    lvlRoleAdd = util.roles.LVL_100;
+                    lvlRoleRemove = util.roles.LVL_90;
                 }
 
                 usr.addRole(server.roles.find(role => _.isEqual(role.name, lvlRoleAdd))).then(() => {
@@ -837,7 +847,7 @@ const util = {
         'LFP_BANNED': "Banned from LFP",
         'lfp': {
             'VANILLA': "Vanilla",
-            'BI': "Bi/Pansexuual",
+            'BI': "Bi/Pansexual",
             'GAY': "Gay",
             'LESBIAN': "Lesbian",
             'FUTA': "Futa",
