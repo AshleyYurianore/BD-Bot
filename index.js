@@ -268,58 +268,78 @@ client.on("message", (message) => {
     if (message.author.bot && !((_.isEqual(message.author.id, "159985870458322944") && _.isEqual(message.channel.name, "📈level-up-log")) || (_.isEqual(message.author.id, "155149108183695360") && _.isEqual(message.channel.name, "🚨reports-log")))) return;
     if (!message.channel.guild) return;
     if (lockdown) return;
-    
+
     if (lfpChannels.includes(message.channel)) {
-        //warn users who post more than 3 images in an LFP channel
-        const number_of_attached_images = message.attachments.filter((embed) => embed.height ? true : false).size;
-        if (util.image_link_count(message.content) + number_of_attached_images > 3) {
-            util.sendTextMessage(channels["lfp-contact"], `${message.author}, your Looking For Partner ad in ${message.channel} contains more than 3 images.\n` +
-            `Please edit it to comply with the rules as described in ${channels["lfp-info"]}.Thanks! :heart:`);
-            util.log(`Warned ${message.author} for sending more than 3 images in LFP ad <${message.url}>`, "lfpInfo", util.logLevel.WARN);
+        let number_of_attached_images = message.attachments.filter(embed => !!embed.height).size;
+        let violationMode = 0;
+        if ((util.image_link_count(message.content) + number_of_attached_images) > 3) { // check for msg which have >3 images in any LFP channel
+            violationMode = 1;
         }
         //warn users who post too fast
-        message.channel.fetchMessages({"before": message.id, "limit": 100})
-        .then(messages => {
-            if (!messages.isEmpty) {
-                const previous_message = messages.reduce((m1, m2) => {
-                    if (m1.author.id != m2.author.id) {
-                        return m1;
-                    }
-                    return m1.createdTimestamp > m2.createdTimestamp ? m1 : m2;
-                }, {"author": message.author, "createdTimestamp": 0});
-                if (previous_message.createdTimestamp != 0) {
-                    const time_passed_s = ~~((message.createdTimestamp - previous_message.createdTimestamp) / 1000);
-                    if (time_passed_s < 60 * 60 * 4) {
-                        util.sendTextMessage(channels["lfp-contact"],
-                            `${message.author}, your Looking For Partner ad in ${message.channel} was sent too fast ` +
-                            `(after ${~~(time_passed_s / 3600)} hours and ${~~((time_passed_s % 3600) / 60)} minutes).\n` +
-                            `Please wait at least 4 hours before sending another ad as described in ${channels["lfp-info"]}. Thanks! :heart:`);
-                        util.log(`Warned ${message.author} for sending LFP ads too fast (after ${~~(time_passed_s / 3600)}h ${~~((time_passed_s % 3600) / 60)}m):\n` +
-                            `Current message: <${message.url}>\n` +
-                            `Previous message: <${previous_message.url}>`, "lfpInfo", util.logLevel.WARN);
+        message.channel.fetchMessages({ "before": message.id, "limit": 100 })
+            .then(messages => {
+                let time_passed_s = 0;
+                let previous_message;
+                if (_.isEmpty(messages)) {
+                    previous_message = messages.reduce((m1, m2) => {
+                        if (!_.isEqual(m1.author.id, m2.author.id)) return m1;
+                        return m1.createdTimestamp > m2.createdTimestamp ? m1 : m2;
+                    }, { "author": message.author, "createdTimestamp": 0 });
+
+                    if (previous_message.createdTimestamp !== 0) {
+                        time_passed_s = ~~((message.createdTimestamp - previous_message.createdTimestamp) / 1000);
+                        if (time_passed_s < 60 * 60 * 4) {
+                            violationMode += 2;
+                        }
                     }
                 }
-            }
-        })
-        .catch(console.error);
+                if (violationMode === 0) {
+                    return;
+                }
+
+                let warnMsg = `${message.author}, your Looking For Partner ad in ${message.channel} `;
+                let reason = "";
+                if (violationMode === 1) { reason = `contains more than 3 images.`; }
+                if (violationMode === 2) { reason = `was sent too fast (after ${~~(time_passed_s / 3600)} hours and ${~~((time_passed_s % 3600) / 60)} minutes).`; }
+                if (violationMode === 3) { reason = `contains more than 3 images AND was sent too fast (after ${~~(time_passed_s / 3600)} hours and ${~~((time_passed_s % 3600) / 60)} minutes).`; }
+
+                message.react('❌')
+                    .then() // react success
+                    .catch(e => {
+                        util.sendTextMessage(channels.main, `HALP, I cannot warn ${message.author} for violating the LFP rules in ${message.channel}! Their ad ${reason}\n` +
+                            `Violating Message Link: ${message.url}\n` +
+                            `Previous Message Link: ${previous_message.url}`);
+                    });
+
+                warnMsg += `${reason} \nPlease follow the guidelines as described in ${channels["lfp-info"]}. Thanks! :heart:`;
+                util.sendTextMessage(channels["lfp-contact"], warnMsg);
+                util.log(`${message.author}'s lfp ad in ${message.channel} ${reason}`, "lfpAdViolation", util.logLevel.INFO);
+            })
+            .catch(e => {
+                util.log('Failed: ' + e.toString(), 'lfpAdViolation', util.logLevel.WARN);
+            });
     }
 
-    //react with :pingangry: to users who mention someone with the Don't Ping role
-    const no_ping_mentions = (message.mentions.members || new DiscordJS.Collection()).filter(member => member.roles.has(dont_ping_role_id));
-    if (no_ping_mentions.size > 0) {
-        const selfping = no_ping_mentions.size == 1 && message.author.id == no_ping_mentions.first().id;
-        const no_ping_mentions_string = no_ping_mentions.reduce((prev_member, next_member) => prev_member + `${next_member} `, "");
-        const log_message = `${message.author}'s message pinging ${no_ping_mentions_string}having <@&${dont_ping_role_id}> in message <${message.url}> with ${ping_violation_reaction_emoji}`;
-        if (message.author.bot || util.isStaff(message) || selfping) { //but exclude bots, staff and self-pings
-            util.log(`Didn't react to ${log_message} because it's ${selfping ? "a self ping" : message.author.bot ? "from a bot" : "from staff"}.`, "Ping role violation", util.logLevel.INFO)
-        }
-        else {
-            message.react(ping_violation_reaction_emoji)
-                .then(reaction => util.log(`Reacted to ${log_message}.`, "Ping role violation", util.logLevel.INFO))
-                .catch(error => util.log(`Failed reacting to ${log_message}.`, "Ping role violation", util.logLevel.WARN));
+    // If not from Mee6 and contains mentions
+    if (!_.isEqual(message.author.id, 159985870458322944) && message.mentions.members.size) {
+        // react with :pingangry: to users who mention someone with the Don't Ping role
+        let dontPingRole = server.roles.find(r => _.isEqual(r.name, util.roles.DONTPING));
+        const no_ping_mentions = message.mentions.members.filter(member => (member.roles.has(dontPingRole.id) && !_.isEqual(member.user, message.author)));
+        if (no_ping_mentions.size !== 0) {
+            const no_ping_mentions_string = no_ping_mentions.reduce((prev_member, next_member) => prev_member + `${next_member} `, "");
+            const log_message = `${message.author} pinged people with <@&${dontPingRole.id}>:\n${no_ping_mentions_string}\nMessage Link: <${message.url}>`;
+            if (!util.isUserStaff(message.author)) { // exclude staff
+                util.log(log_message, "Ping role violation", util.logLevel.INFO);
+                message.react(ping_violation_reaction_emoji)
+                    .catch(error => {
+                        util.log(`Failed reacting to <${message.url}>`, "Ping role violation", util.logLevel.WARN);
+                        util.sendTextMessage(channels.main, `HALP, I'm blocked by ${message.author}!\n` +
+                            `They pinged people with the <@&${dontPingRole.id}> role!\nMessage Link: <${message.url}>`);
+                    });
+            }
         }
     }
-    
+
     if (message.isMentioned(client.user)) {
         const args = message.content.trim().split(/ +/g).splice(1);
         util.log(message.content, `mentioned by (${message.author})`, util.logLevel.INFO);
@@ -591,7 +611,6 @@ const cmd = {
         }
     },
     'cn': function (message) {
-        return;
         if (_.isEqual(message, "auto") || util.isStaff(message)) {
             let successCount = 0;
             let kickCount = 0;
@@ -601,6 +620,9 @@ const cmd = {
             _.each(newcomerMembers, (member, index) => {
             util.log(" Clearing newcomer role from: " + member + " (" + (index+1) + "/" + newcomerMembers.length + ")", "clearNewcomer", util.logLevel.INFO);
                 try {
+                    if ((new Date() - member.joinedAt)/1000/60 <= 10) { // joined less than 10 minutes ago
+                        return;
+                    }
                     server.member(member).removeRole(newcomerRole)
                         .then((guildMember) => {
                             if (_.isNull(guildMember.roles.find(role => role.name === "NSFW")) && ((new Date() - guildMember.joinedAt)/1000/60 > 10)) { // joined more than 10 minutes ago
@@ -765,6 +787,7 @@ const util = {
     }, 
 
     'roles': {
+        'DONTPING': "DONT PING⛔",
         'STAFF': "Staff",
         'TRIALMOD': "Trial-Moderator",
         'ANCIENT': "💠Ancient Member",
@@ -786,6 +809,21 @@ const util = {
         'LVL_80': "Doesn't leave bed (Lvl 80+)",
         'LVL_90': "Sperm Bank (Lvl 90+)",
         'LVL_100': "Retired Pornstar (Lvl 100+)",
+        'LFP_BANNED': "Banned from LFP",
+        'lfp': {
+            'VANILLA': "Vanilla",
+            'BI': "Bi/Pansexual",
+            'GAY': "Gay",
+            'LESBIAN': "Lesbian",
+            'FUTA': "Futa",
+            'RPFUTA': "RP with Futas",
+            'FURRY': "Furry",
+            'RPFURRY': "RP with Furries",
+            'BEAST': "Beast",
+            'HYBRID': "Hybrid",
+            'RPBEAST': "RP with Beasts",
+            'EXTREME': "Extreme",
+        }
     },
 
     'reportToAsheN': function (errMsg) {
