@@ -40,6 +40,20 @@ let channels = {
     'lfp-long': "📰lfp-long-term-plot",
     'lfp-rabbit': "📺lfp-vc-rabbit",
 };
+let level_roles = {
+    'LVL_0': "Lewd (Lvl 0+)",
+    'LVL_5': "Pervert (Lvl 5+)",
+    'LVL_10': "Tainted (Lvl 10+)",
+    'LVL_20': "Slut (Lvl 20+)",
+    'LVL_30': "Whore (Lvl 30+)",
+    'LVL_40': "Cumdump (Lvl 40+)",
+    'LVL_50': "Pornstar (Lvl 50+)",
+    'LVL_60': "Sex-Toy (Lvl 60+)",
+    'LVL_70': "Server Bus (Lvl 70+)",
+    'LVL_80': "Doesn't leave bed (Lvl 80+)",
+    'LVL_90': "Sperm Bank (Lvl 90+)",
+    'LVL_100': "Retired Pornstar (Lvl 100+)",
+};
 let lfpTimer = [];
 let lfpChannels = [];
 let AsheN;
@@ -141,6 +155,7 @@ const startUpMod = {
             _.each(channels, function (channel, channelID) {
                 channels[channelID] = server.channels.find(ch => _.isEqual(ch.name, channels[channelID]));
             });
+            _.each(Object.keys(level_roles), role_name => level_roles[role_name] = server.roles.find(role => role.name == level_roles[role_name]));
             AsheN = client.users.find(user => _.isEqual(user.id, "528957906972835850")); //"105301872818028544"));
             ping_violation_reaction_emoji = server.emojis.get(ping_violation_reaction_emoji);
             client.user.setActivity("Serving the Den").catch(util.reportToAsheN);
