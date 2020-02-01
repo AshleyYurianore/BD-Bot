@@ -46,7 +46,6 @@ let AsheN;
 let lockdown = false;
 let disableMentions = true;
 let ongoingProcess = false;
-const dont_ping_role_id = "587756942395703306";
 //let ping_violation_reaction_emoji = "535558794764222476"; //:pingangry:
 let ping_violation_reaction_emoji = "670647474784043028"; //:pingmad:
 const level_up_module = "Level roles";
