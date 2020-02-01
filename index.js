@@ -49,6 +49,7 @@ let ongoingProcess = false;
 const dont_ping_role_id = "587756942395703306";
 //let ping_violation_reaction_emoji = "535558794764222476"; //:pingangry:
 let ping_violation_reaction_emoji = "670647474784043028"; //:pingmad:
+const level_up_module = "Level roles";
 
 const dbMod = {
     'warnUser': function (member, level, warner, reason) {
@@ -186,6 +187,29 @@ const startUpMod = {
 
 client.on("ready", () => {
     startUpMod.initialize("I'M AWAKE! AWOOO~");
+
+    //Catch up on missed level-ups
+    server.channels.forEach(channel => {
+        if (channel.name != "📈level-up-log") {
+            return;
+        }
+        channel.fetchMessages({"limit": 100})
+        .then(messages => {
+            //Remove duplicates so that when someone levels from lvl 3 to 4 and lvlv 4 to 5 it doesn't trigger 2 level-up handles
+            let seen_users = new DiscordJS.Collection();
+            messages.sort((left, right) => right.createdTimestamp - left.createdTimestamp); //newest to oldest
+            messages.forEach(message => {
+                if (message.mentions.members && message.mentions.members.first() && !seen_users.get(message.mentions.members.first().id)) {
+                    seen_users.set(message.mentions.members.first().id, message);
+                }
+            });
+            //Handle level ups that we may have missed
+            seen_users.forEach(util.handle_level_up);
+        })
+        .catch(error => {
+            util.log(`Failed reading old messages from ${channel} because of ${error}`, level_up_module, util.logLevel.ERROR);
+        });
+    });
 });
 
 client.on("guildMemberAdd", (member) => {
@@ -320,57 +344,9 @@ client.on("message", (message) => {
                 }
             }
         } // _.isEqual(message.author.id, "159985870458322944") &&
-    } else if (_.isEqual(message.channel.name, "📈level-up-log")) {
-        let lvlString = "has reached **level ";
-        let lvlStringPos = message.content.indexOf(lvlString);
-        message.mentions.users.forEach(function (user, id) {
-            if (lvlStringPos > 0) {
-                let usr = message.guild.members.get(id);
-                let level = parseInt(message.content.substr(lvlStringPos + lvlString.length, 2));
-                let lvlRoleAdd;
-                let lvlRoleRemove;
-
-                if (level === 5) {
-                    user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 5` in the Breeding Den Server and now you're able to join Voice Channels if you want to!" +
-                        "\n\n(_P.S. I'm a bot, so please don't reply!_)");
-                    lvlRoleAdd = util.roles.LVL_5;
-                    lvlRoleRemove = util.roles.LVL_0;
-                } else if (level === 10) {
-                    lvlRoleAdd = util.roles.LVL_10;
-                    lvlRoleRemove = util.roles.LVL_5;
-                } else if (level === 20) {
-                    user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 20` in the Breeding Den Server and now you've unlocked the <#560869811157073920> " +
-                        "and you're able to create your own cult, as long as certain criterias are met too!" +
-                        "For more detailed information, please check out the very top message in <#538901164897337347>" +
-                        "\nIf you're interested, simply ask a Staff member and they will guide you through the process!\n\n(_P.S. I'm a bot, so please don't reply!_)");
-                    lvlRoleAdd = util.roles.LVL_20;
-                    lvlRoleRemove = util.roles.LVL_10;
-                } else if (level === 30) {
-                    user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 30` in the Breeding Den Server and now you're able to get yourself a __Custom Role__ if you want to!" +
-                        "\nSimply ask a Staff member and tell them the __Name__ and __Color__ (ideally in Hexcode) of the Custom role!\n\n(_P.S. I'm a bot, so please don't reply!_)");
-                    lvlRoleAdd = util.roles.LVL_30;
-                    lvlRoleRemove = util.roles.LVL_20;
-                } else if (level === 40) {
-                    lvlRoleAdd = util.roles.LVL_40;
-                    lvlRoleRemove = util.roles.LVL_30;
-                } else if (level === 50) {
-                    lvlRoleAdd = util.roles.LVL_50;
-                    lvlRoleRemove = util.roles.LVL_40;
-                } else if (level === 60) {
-                    lvlRoleAdd = util.roles.LVL_60;
-                    lvlRoleRemove = util.roles.LVL_50;
-                }
-
-                usr.addRole(server.roles.find(role => _.isEqual(role.name, lvlRoleAdd))).then(() => {
-                    message.react('✅').then();
-                    if (lvlRoleRemove !== undefined) {
-                        try {
-                            usr.removeRole(server.roles.find(role => _.isEqual(role.name, lvlRoleRemove))).then();
-                        } catch (e) { }
-                    }
-                });
-            }
-        });
+    }
+    else if (message.channel.name == "📈level-up-log") {
+        util.handle_level_up(message);
     }
     else if (_.isEqual(message.channel.name, "🚨reports-log")) {
         if (message.embeds && message.embeds[0].author && message.embeds[0].author.name.indexOf('Mute')) {
@@ -863,7 +839,108 @@ const util = {
 
     'image_link_count': function (message_string) {
         return (message_string.toUpperCase().match(/\.PNG|\.JPG|\.JPEG|\.TIFF|\.BMP|\.PPM|\.PGM|\.PBM|\.PNM|\.WEBP|\.SVG|\.GIF/g) || []).length;
-    }
+    },
+
+    'level_to_role': function (level) {
+        if (level < 5) {
+            return level_roles.LVL_0;
+        }
+        if (level < 10) {
+            return level_roles.LVL_5;
+        }
+        if (level < 20) {
+            return level_roles.LVL_10;
+        }
+        if (level < 30) {
+            return level_roles.LVL_20;
+        }
+        if (level < 40) {
+            return level_roles.LVL_30;
+        }
+        if (level < 50) {
+            return level_roles.LVL_40;
+        }
+        if (level < 60) {
+            return level_roles.LVL_50;
+        }
+        if (level < 70) {
+            return level_roles.LVL_60;
+        }
+        if (level < 80) {
+            return level_roles.LVL_70;
+        }
+        if (level < 90) {
+            return level_roles.LVL_80;
+        }
+        if (level < 100) {
+            return level_roles.LVL_90;
+        }
+        return level_roles.LVL_100;
+    },
+
+    'handle_level_up': message => {
+        if (!message.mentions.members || message.mentions.members.size != 1) {
+            return;
+        }
+        const member = message.mentions.members.first();
+        const user = member.user;
+        const level_string = message.content.match(/level \d+/g)[0];
+        if (!level_string) {
+            return;
+        }
+        const level = parseInt(level_string.match(/\d+/g));
+        const new_role = util.level_to_role(level);
+
+        const old_roles = member.roles.filter(role => _.contains(level_roles, role));
+        let role_gain_string;
+        if (!old_roles.find(role => role == new_role)) {
+            role_gain_string = `${new_role}`;
+        }
+        const outdated_roles = old_roles.filter(role => role != new_role);
+        let role_lose_string;
+        if (outdated_roles.size > 0) {
+            const outdated_roles_string = outdated_roles.reduce((current, next) => current + `${next}`, "");
+            role_lose_string = `${outdated_roles_string}`;
+        }
+        const reason = `${user.username} gained level ${level}`;
+
+        //Note: Must add new role before removing old role because Yag adds lvl 0 role when no level role is present
+        const remove_roles_function = () => {
+            if (role_lose_string) {
+                member.removeRoles(old_roles, reason)
+                .then(() => {
+                    message.react('✅').catch(console.error);
+                    util.log(`Removed role(s) ${role_lose_string} from ${user} because level ${level} because of message <${message.url}>.`, level_up_module, util.logLevel.INFO);
+                    //put the DM here because removing old roles is the last thing we do and at this point it has succeeded
+                    if (level === 5) {
+                        user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 5` in the Breeding Den Server and now you're able to join Voice Channels if you want to!" +
+                            "\n\n(_P.S. I'm a bot, so please don't reply!_)");
+                    } else if (level === 20) {
+                        user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 20` in the Breeding Den Server and now you've unlocked the <#560869811157073920> " +
+                            "and you're able to create your own cult, as long as certain criterias are met too!" +
+                            "For more detailed information, please check out the very top message in <#538901164897337347>" +
+                            "\nIf you're interested, simply ask a Staff member and they will guide you through the process!\n\n(_P.S. I'm a bot, so please don't reply!_)");
+                    }
+                })
+                .catch(error => {
+                    util.log(`Failed removing role(s) ${role_lose_string} because level ${level} because of message <${message.url}> from ${user} because of ${error}`, level_up_module, util.logLevel.ERROR);
+                });
+            }
+        };
+        if (role_gain_string) {
+            member.addRole(new_role, reason)
+            .then(() => {
+                util.log(`Added role ${role_gain_string} to ${user} because level ${level} because of message <${message.url}>.`, level_up_module, util.logLevel.INFO);
+                remove_roles_function();
+            })
+            .catch(error => {
+                util.log(`Failed adding role ${role_gain_string} because level ${level} because of message <${message.url}> to ${user} because of ${error}`, level_up_module, util.logLevel.ERROR);
+            });
+        }
+        else {
+            remove_roles_function();
+        }
+    },
 };
 
 client.login(_.isUndefined(localConfig) ? process.env.BOT_TOKEN : localConfig.TOKEN);
