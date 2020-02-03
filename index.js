@@ -334,7 +334,7 @@ client.on("message", (message) => {
     }
 
     // If not from Mee6 and contains mentions
-    if (!_.isEqual(message.author.id, 159985870458322944) && message.mentions.members.size) {
+    if (!_.isEqual(message.author.id, "159985870458322944") && message.mentions.members.size) {
         // react with :pingangry: to users who mention someone with the Don't Ping role
         let dontPingRole = server.roles.find(r => _.isEqual(r.name, util.roles.DONTPING));
         const no_ping_mentions = message.mentions.members.filter(member => (member.roles.has(dontPingRole.id) && !_.isEqual(member.user, message.author)));
