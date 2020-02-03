@@ -40,6 +40,11 @@ let channels = {
     'lfp-extreme': "✨lfp-extreme",
     'lfp-long': "📰lfp-long-term-plot",
     'lfp-rabbit': "📺lfp-vc-rabbit",
+    'nsfw-general': "🔞nsfw-general",
+    'nsfw-media': "👅nsfw-media",
+    'tinkering': "tinkering",
+    'authentication-logs': "🎫authentication-logs",
+    'paranoia-plaza': "🙈ashs-paranoia-plaza",
 };
 let level_roles = {
     'LVL_0': "Lewd (Lvl 0+)",
@@ -55,15 +60,25 @@ let level_roles = {
     'LVL_90': "Sperm Bank (Lvl 90+)",
     'LVL_100': "Retired Pornstar (Lvl 100+)",
 };
+let roles = {
+    "No_Ping": "DONT PING⛔",
+    "Newcomer": "Newcomer",
+    "CustomRoles": "--Custom Roles--"
+};
+let emojis = {
+    "bancat": "bancat",
+    "pingmad": "pingmad",
+    "pingangry": "pingangry",
+};
 let lfpTimer = [];
 let lfpChannels = [];
 let AsheN;
 let lockdown = false;
 let disableMentions = true;
-let ongoingProcess = false;
-//let ping_violation_reaction_emoji = "535558794764222476"; //:pingangry:
-let ping_violation_reaction_emoji = "670647474784043028"; //:pingmad:
+let ping_violation_reaction_emoji = "pingmad";
 const level_up_module = "Level roles";
+const temporary_message_timeout = 10000; //time in ms until auto-delete messages
+const link_regex = /((https?|ftp):\/\/|www\.)(\w.+\w\W?)/g; //source: https://support.discordapp.com/hc/en-us/community/posts/360036244152-Change-in-text-link-detection-RegEx
 
 const dbMod = {
     'warnUser': function (member, level, warner, reason) {
@@ -157,9 +172,12 @@ const startUpMod = {
                 channels[channelID] = server.channels.find(ch => _.isEqual(ch.name, channels[channelID]));
             });
             _.each(Object.keys(level_roles), role_name => level_roles[role_name] = server.roles.find(role => role.name == level_roles[role_name]));
+            _.each(Object.keys(roles), role_name => roles[role_name] = server.roles.find(role => role.name == roles[role_name]));
+            _.each(emojis, emojiname => emojis[emojiname] = server.emojis.find(emoji => emoji.name == emojiname));
             AsheN = client.users.find(user => _.isEqual(user.id, "528957906972835850")); //"105301872818028544"));
             ping_violation_reaction_emoji = server.emojis.get(ping_violation_reaction_emoji);
             client.user.setActivity("Serving the Den").catch(util.reportToAsheN);
+            ping_violation_reaction_emoji = emojis[ping_violation_reaction_emoji];
             util.sendTextMessage(channels.main, startUpMessage);
             util.log("INITIALIZED.", "Startup", util.logLevel.INFO);
 
@@ -331,6 +349,85 @@ client.on("message", (message) => {
             .catch(e => {
                 util.log('Failed: ' + e.toString(), 'lfpAdViolation', util.logLevel.WARN);
             });
+    }
+
+    //delete links in nsfw-general
+    if (message.channel.id == channels["nsfw-general"].id) {
+        if (message.content.match(link_regex)) {
+            if (util.isStaff(message)) { //have mercy on staff and don't delete messages
+                message.react(emojis.bancat).catch(console.error);
+                return;
+            }
+            message.delete()
+            .then(() => {
+                channels.logs.send(
+                    new DiscordJS.RichEmbed()
+                    .setTitle(`Removed message in ${message.channel.name}`)
+                    .setAuthor(`WARN`)
+                    .setColor("#ffff00")
+                    .setDescription(`${message.author}: ${message}`)
+                    .setFooter("Automatic Link Removal")
+                    .setTimestamp(new Date())
+                ).catch(console.error);
+            })
+            .catch(console.error);
+            message.channel.startTyping();
+            message.channel.send(`${message.author} Sorry, no media or links of any kind in this channel. Put it in ${channels["nsfw-media"]} or another media channel please.`)
+            .then(message => {
+                message.channel.stopTyping();
+                message.delete(temporary_message_timeout).catch(console.error);
+            })
+            .catch(console.log);
+            return;
+        }
+    }
+
+    //be paranoid about newcomers who invite people
+    if (message.channel.id == channels.tinkering.id) {
+        const invite_regex = /<@\d+> \*\*joined\*\*; Invited by \*\*.*\*\* \(\*\*\d+\*\* invites\)/g;
+        if (!message.content.match(invite_regex)) { //not an invite message
+            return;
+        }
+        const before_name = "> **joined**; Invited by **";
+        const after_name = "** (**";
+        const name_start_pos = message.content.indexOf(before_name) + before_name.length;
+        const name_end_pos = message.content.indexOf(after_name);
+        const name = message.content.substr(name_start_pos, name_end_pos - name_start_pos);
+        if (name == "DISBOARD" || name == "AsheN") { //Can't be paranoid about people joining via their invites. Or can we?
+            return;
+        }
+        const before_invites = before_name + name + "** (**";
+        const after_invites = "** invites)";
+        const before_invites_pos = message.content.indexOf(before_invites) + before_invites.length;
+        const after_invites_pos = message.content.indexOf(after_invites);
+        const invites = parseInt(message.content.substr(before_invites_pos, after_invites_pos - before_invites_pos));
+        const members = server.members.filter(member => member.user.username == name);
+        if (members.size == 0) {
+            util.sendTextMessage(channels.tinkering, `Failed figuring out who ${name} is.`);
+            return;
+        }
+        const inferred_members_text = members.reduce((member, result) => `${member} ${result}`, "").trim();
+        const newcomer_role_id = "595288534152118273";
+        const newcomer_role = server.roles.get(newcomer_role_id);
+        const newcomer_members = members.find(member => member.roles.has(newcomer_role_id));
+        if (newcomer_members) {
+            util.sendTextMessage(channels["paranoia-plaza"], `:warning: Got invite number ${invites} from ${name} which is ${members.size == 1 ? "" : "one of "}${newcomer_role} ${inferred_members_text}.`);
+        }
+        return;
+    }
+
+    //copy new account joins from auth log to paranoia plaza
+    if (message.channel.id == channels["authentication-logs"].id) {
+        if (!message.embeds) { //Stop chatting in the auth log channel :reeeee:
+            return;
+        }
+        message.embeds.forEach(embed => {
+            if (embed.description.indexOf("**NEW ACCOUNT**") > 0) {
+                channels["paranoia-plaza"].send(new DiscordJS.RichEmbed(embed))
+                .catch(console.error);
+            }
+        });
+        return;
     }
 
     // If not from Mee6 and contains mentions
