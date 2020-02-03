@@ -948,10 +948,24 @@ const util = {
         }
         const reason = `${user.username} gained level ${level}`;
 
+        //Note: Need to be careful to add first and then remove, otherwise Yag adds the lvl0 role
+        const role_remover = () => {
+            if (role_lose_string) {
+                member.removeRoles(old_roles, reason)
+                .then(() => {
+                    message.react('✅').catch(console.error);
+                    util.log(`Successfully removed ${role_lose_string} from ${user}\nMessage Link: <${message.url}>.`, level_up_module, util.logLevel.INFO);
+                })
+                .catch(error => {
+                    util.log(`Failed to remove ${role_lose_string} from ${user}\nMessage Link: <${message.url}>\nError: ${error}`, level_up_module, util.logLevel.ERROR);
+                });
+            }
+        }
         // add role
         if (role_gain_string) {
             member.addRole(server.roles.find(r => _.isEqual(new_role, r.name)), reason)
             .then(() => {
+                role_remover();
                 util.log(`Successfully added ${role_gain_string} to ${user}\nMessage Link: <${message.url}>.`, level_up_module, util.logLevel.INFO);
                 if (level === 5) {
                     user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 5` in the Breeding Den Server! You're now able to submit characters and join Voice Channels if you want to!" +
@@ -970,17 +984,9 @@ const util = {
                 util.log(`Failed to add ${role_gain_string} to ${user}\nMessage Link: <${message.url}>\nError: ${error}`, level_up_module, util.logLevel.ERROR);
             });
         }
-
-        // remove role
-        if (role_lose_string) {
-            member.removeRoles(old_roles, reason)
-                .then(() => {
-                    message.react('✅').catch(console.error);
-                    util.log(`Successfully removed ${role_lose_string} from ${user}\nMessage Link: <${message.url}>.`, level_up_module, util.logLevel.INFO);
-                })
-                .catch(error => {
-                    util.log(`Failed to remove ${role_lose_string} from ${user}\nMessage Link: <${message.url}>\nError: ${error}`, level_up_module, util.logLevel.ERROR);
-                });
+        else {
+            // remove role
+            role_remover();
         }
     },
 };
