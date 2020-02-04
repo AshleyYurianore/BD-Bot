@@ -403,7 +403,7 @@ client.on("message", (message) => {
         const invites = parseInt(message.content.substr(before_invites_pos, after_invites_pos - before_invites_pos));
         const members = server.members.filter(member => member.user.username == name);
         if (members.size == 0) {
-            util.sendTextMessage(channels.tinkering, `Failed figuring out who ${name} is.`);
+            util.sendTextMessage(channels.tinkering, `Can't figure out who **${name}** is.`);
             return;
         }
         const inferred_members_text = members.reduce((member, result) => `${member} ${result}`, "").trim();
@@ -411,7 +411,7 @@ client.on("message", (message) => {
         const newcomer_role = server.roles.get(newcomer_role_id);
         const newcomer_members = members.find(member => member.roles.has(newcomer_role_id));
         if (newcomer_members) {
-            util.sendTextMessage(channels["paranoia-plaza"], `:warning: Got invite number ${invites} from ${name} which is ${members.size == 1 ? "" : "one of "}${newcomer_role} ${inferred_members_text}.`);
+            util.sendTextMessage(channels["paranoia-plaza"], `:warning: Got ${newcomer_role} invite number ${invites} for ${message.mentions.members.first()} from ${members.size == 1 ? "" : "one of "}${inferred_members_text}.`);
         }
         return;
     }
