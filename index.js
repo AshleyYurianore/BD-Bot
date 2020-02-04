@@ -1032,12 +1032,12 @@ const util = {
         const level = parseInt(level_string.match(/\d+/g));
         const new_role = util.level_to_role(level);
 
-        const old_roles = member.roles.filter(role => _.contains(util.roles.LVL, role.name));
+        const old_roles = member.roles.filter(role => _.contains(level_roles, role));
         let role_gain_string;
-        if (!old_roles.find(role => _.isEqual(role.name, new_role))) {
+        if (!old_roles.find(role => role == new_role)) {
             role_gain_string = `${new_role}`;
         }
-        const outdated_roles = old_roles.filter(role => !_.isEqual(role.name, new_role));
+        const outdated_roles = old_roles.filter(role => role != new_role);
         let role_lose_string;
         if (outdated_roles.size > 0) {
             const outdated_roles_string = outdated_roles.reduce((current, next) => current + `${next}`, "");
@@ -1045,45 +1045,41 @@ const util = {
         }
         const reason = `${user.username} gained level ${level}`;
 
-        //Note: Need to be careful to add first and then remove, otherwise Yag adds the lvl0 role
-        const role_remover = () => {
+        //Note: Must add new role before removing old role because Yag adds lvl 0 role when no level role is present
+        const remove_roles_function = () => {
             if (role_lose_string) {
                 member.removeRoles(old_roles, reason)
                 .then(() => {
                     message.react('✅').catch(console.error);
-                    util.log(`Successfully removed ${role_lose_string} from ${user}\nMessage Link: <${message.url}>.`, level_up_module, util.logLevel.INFO);
+                    util.log(`Removed role(s) ${role_lose_string} from ${user} because level ${level} because of message <${message.url}>.`, level_up_module, util.logLevel.INFO);
+                    //put the DM here because removing old roles is the last thing we do and at this point it has succeeded
+                    if (level === 5) {
+                        user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 5` in the Breeding Den Server and now you're able to join Voice Channels if you want to!" +
+                            "\n\n(_P.S. I'm a bot, so please don't reply!_)");
+                    } else if (level === 20) {
+                        user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 20` in the Breeding Den Server and now you've unlocked the <#560869811157073920> " +
+                            "and you're able to create your own cult, as long as certain criterias are met too!" +
+                            "For more detailed information, please check out the very top message in <#538901164897337347>" +
+                            "\nIf you're interested, simply ask a Staff member and they will guide you through the process!\n\n(_P.S. I'm a bot, so please don't reply!_)");
+                    }
                 })
                 .catch(error => {
-                    util.log(`Failed to remove ${role_lose_string} from ${user}\nMessage Link: <${message.url}>\nError: ${error}`, level_up_module, util.logLevel.ERROR);
+                    util.log(`Failed removing role(s) ${role_lose_string} because level ${level} because of message <${message.url}> from ${user} because of ${error}`, level_up_module, util.logLevel.ERROR);
                 });
             }
-        }
-        // add role
+        };
         if (role_gain_string) {
-            member.addRole(server.roles.find(r => _.isEqual(new_role, r.name)), reason)
+            member.addRole(new_role, reason)
             .then(() => {
-                role_remover();
-                util.log(`Successfully added ${role_gain_string} to ${user}\nMessage Link: <${message.url}>.`, level_up_module, util.logLevel.INFO);
-                if (level === 5) {
-                    user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 5` in the Breeding Den Server! You're now able to submit characters and join Voice Channels if you want to!" +
-                        "\n\n(_P.S. I'm a bot, so please don't reply!_)");
-                } else if (level === 20) {
-                    user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 20` in the Breeding Den Server! You've unlocked the <#560869811157073920> " +
-                        "and you're able to create your own cult, as long as certain criterias are met too!" +
-                        "For more detailed information, please check out the very top message in <#538901164897337347>" +
-                        "\nIf you're interested, simply ask a Staff member and they will guide you through the process!\n\n(_P.S. I'm a bot, so please don't reply!_)");
-                } else if (level === 30) {
-                    user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 30` in the Breeding Den Server! You're now able to get yourself a __Custom Role__ if you want to!" +
-                        "\nSimply ask a Staff member and tell them the __Name__ and __Color__ (ideally in Hexcode) of the Custom role!\n\n(_P.S. I'm a bot, so please don't reply!_)");
-                }
+                util.log(`Added role ${role_gain_string} to ${user} because level ${level} because of message <${message.url}>.`, level_up_module, util.logLevel.INFO);
+                remove_roles_function();
             })
             .catch(error => {
-                util.log(`Failed to add ${role_gain_string} to ${user}\nMessage Link: <${message.url}>\nError: ${error}`, level_up_module, util.logLevel.ERROR);
+                util.log(`Failed adding role ${role_gain_string} because level ${level} because of message <${message.url}> to ${user} because of ${error}`, level_up_module, util.logLevel.ERROR);
             });
         }
         else {
-            // remove role
-            role_remover();
+            remove_roles_function();
         }
     },
 };
