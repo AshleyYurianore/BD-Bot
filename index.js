@@ -578,7 +578,7 @@ client.on("message", (message) => {
                         .addField(
                             "Target Audience for LFP posts:",
                             target
-                        )
+                        ) 
                     ;
 
                     channel.send(lfpEmbed);
