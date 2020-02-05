@@ -1009,10 +1009,10 @@ const util = {
 
         const old_roles = member.roles.filter(role => _.contains(util.roles.LVL, role));
         let role_gain_string;
-        if (!old_roles.find(role => _.isEqual(role.name, new_role))) {
+        if (!old_roles.find(role => _.isEqual(role, new_role))) {
             role_gain_string = `${new_role}`;
         }
-        const outdated_roles = old_roles.filter(role => !_.isEqual(role.name, new_role));
+        const outdated_roles = old_roles.filter(role => !_.isEqual(role, new_role));
         let role_lose_string;
         if (outdated_roles.size > 0) {
             const outdated_roles_string = outdated_roles.reduce((current, next) => current + `${next}`, "");
