@@ -20,9 +20,9 @@ let server = _.isUndefined(localConfig) ? process.env.SERVER_ID : localConfig.SE
 let channels = {
     'main': "accalia-main",
     'level': "📈level-up-log",
-    'logs': "accalia-logs", 
+    'logs': "accalia-logs",
     'warnings': "🚨warnings",
-    'charSub': "📃character-submission", 
+    'charSub': "📃character-submission",
     'charArchive': "📚character-archive",
     'charIndex': "📕character-index",
     'reports': "📮reports-and-issues",
@@ -46,20 +46,6 @@ let channels = {
     'authentication-logs': "🎫authentication-logs",
     'paranoia-plaza': "🙈ashs-paranoia-plaza",
 };
-let level_roles = {
-    'LVL_0': "Lewd (Lvl 0+)",
-    'LVL_5': "Pervert (Lvl 5+)",
-    'LVL_10': "Tainted (Lvl 10+)",
-    'LVL_20': "Slut (Lvl 20+)",
-    'LVL_30': "Whore (Lvl 30+)",
-    'LVL_40': "Cumdump (Lvl 40+)",
-    'LVL_50': "Pornstar (Lvl 50+)",
-    'LVL_60': "Sex-Toy (Lvl 60+)",
-    'LVL_70': "Server Bus (Lvl 70+)",
-    'LVL_80': "Doesn't leave bed (Lvl 80+)",
-    'LVL_90': "Sperm Bank (Lvl 90+)",
-    'LVL_100': "Retired Pornstar (Lvl 100+)",
-};
 let roles = {
     "No_Ping": "DONT PING⛔",
     "Newcomer": "Newcomer",
@@ -75,9 +61,8 @@ let lfpChannels = [];
 let AsheN;
 let lockdown = false;
 let disableMentions = true;
-let ping_violation_reaction_emoji = "pingmad";
+let ping_violation_reaction_emoji = emojis.pingangry;
 const level_up_module = "Level roles";
-const temporary_message_timeout = 10000; //time in ms until auto-delete messages
 const link_regex = /((https?|ftp):\/\/|www\.)(\w.+\w\W?)/g; //source: https://support.discordapp.com/hc/en-us/community/posts/360036244152-Change-in-text-link-detection-RegEx
 
 const dbMod = {
@@ -171,13 +156,14 @@ const startUpMod = {
             _.each(channels, function (channel, channelID) {
                 channels[channelID] = server.channels.find(ch => _.isEqual(ch.name, channels[channelID]));
             });
-            _.each(Object.keys(level_roles), role_name => level_roles[role_name] = server.roles.find(role => role.name == level_roles[role_name]));
-            _.each(Object.keys(roles), role_name => roles[role_name] = server.roles.find(role => role.name == roles[role_name]));
-            _.each(emojis, emojiname => emojis[emojiname] = server.emojis.find(emoji => emoji.name == emojiname));
+            _.each(Object.keys(util.roles.LVL), role_name => util.roles.LVL[role_name] = server.roles.find(role => role.name === util.roles.LVL[role_name]));
+            _.each(Object.keys(roles), role_name => roles[role_name] = server.roles.find(role => role.name === roles[role_name]));
+            _.each(emojis, emojiname => emojis[emojiname] = server.emojis.find(emoji => emoji.name === emojiname));
+
             AsheN = client.users.find(user => _.isEqual(user.id, "528957906972835850")); //"105301872818028544"));
-            ping_violation_reaction_emoji = server.emojis.get(ping_violation_reaction_emoji);
             client.user.setActivity("Serving the Den").catch(util.reportToAsheN);
             ping_violation_reaction_emoji = emojis[ping_violation_reaction_emoji];
+
             util.sendTextMessage(channels.main, startUpMessage);
             util.log("INITIALIZED.", "Startup", util.logLevel.INFO);
 
@@ -351,39 +337,28 @@ client.on("message", (message) => {
             });
     }
 
-    //delete links in nsfw-general
-    if (message.channel.id == channels["nsfw-general"].id) {
+    // delete links in nsfw-general
+    if (_.isEqual(message.channel.id, channels["nsfw-general"].id)) {
         if (message.content.match(link_regex)) {
             if (util.isStaff(message)) { //have mercy on staff and don't delete messages
                 message.react(emojis.bancat).catch(console.error);
                 return;
             }
+            const logBody = `link in ${message.channel} from ${message.author}\\nMessage content: ${message}`;
             message.delete()
-            .then(() => {
-                channels.logs.send(
-                    new DiscordJS.RichEmbed()
-                    .setTitle(`Removed message in ${message.channel.name}`)
-                    .setAuthor(`WARN`)
-                    .setColor("#ffff00")
-                    .setDescription(`${message.author}: ${message}`)
-                    .setFooter("Automatic Link Removal")
-                    .setTimestamp(new Date())
-                ).catch(console.error);
-            })
-            .catch(console.error);
-            message.channel.startTyping();
-            message.channel.send(`${message.author} Sorry, no media or links of any kind in this channel. Put it in ${channels["nsfw-media"]} or another media channel please.`)
-            .then(message => {
-                message.channel.stopTyping();
-                message.delete(temporary_message_timeout).catch(console.error);
-            })
-            .catch(console.log);
+                .then(() => {
+                    util.log(`Removed ${logBody}`, 'Automatic Link Removal', util.logLevel.WARN);
+                })
+                .catch((e) => {
+                    util.log(`Failed to remove ${logBody}\nError: ${e.toString()}`, 'Automatic Link Removal', util.logLevel.ERROR);
+                });
+            util.sendTextMessage(message.channel, `${message.author} Sorry, no media or links of any kind in this channel. Put it in ${channels["nsfw-media"]} or another media channel please.`);
             return;
         }
     }
 
-    //be paranoid about newcomers who invite people
-    if (message.channel.id == channels.tinkering.id) {
+    // be paranoid about newcomers who invite people
+    if (_.isEqual(message.channel.id, channels.tinkering.id)) {
         const invite_regex = /<@\d+> \*\*joined\*\*; Invited by \*\*.*\*\* \(\*\*\d+\*\* invites\)/g;
         if (!message.content.match(invite_regex)) { //not an invite message
             return;
@@ -393,7 +368,7 @@ client.on("message", (message) => {
         const name_start_pos = message.content.indexOf(before_name) + before_name.length;
         const name_end_pos = message.content.indexOf(after_name);
         const name = message.content.substr(name_start_pos, name_end_pos - name_start_pos);
-        if (name == "DISBOARD" || name == "AsheN") { //Can't be paranoid about people joining via their invites. Or can we?
+        if (name === "DISBOARD" || name === "AsheN") { //Can't be paranoid about people joining via their invites. Or can we?
             return;
         }
         const before_invites = before_name + name + "** (**";
@@ -401,9 +376,9 @@ client.on("message", (message) => {
         const before_invites_pos = message.content.indexOf(before_invites) + before_invites.length;
         const after_invites_pos = message.content.indexOf(after_invites);
         const invites = parseInt(message.content.substr(before_invites_pos, after_invites_pos - before_invites_pos));
-        const members = server.members.filter(member => member.user.username == name);
-        if (members.size == 0) {
-            util.sendTextMessage(channels.tinkering, `Can't figure out who **${name}** is.`);
+        const members = server.members.filter(member => member.user.username === name);
+        if (members.size === 0) {
+            util.sendTextMessage(channels.tinkering, `Failed figuring out who ${name} is.`);
             return;
         }
         const inferred_members_text = members.reduce((member, result) => `${member} ${result}`, "").trim();
@@ -411,13 +386,13 @@ client.on("message", (message) => {
         const newcomer_role = server.roles.get(newcomer_role_id);
         const newcomer_members = members.find(member => member.roles.has(newcomer_role_id));
         if (newcomer_members) {
-            util.sendTextMessage(channels["paranoia-plaza"], `:warning: Got ${newcomer_role} invite number ${invites} for ${message.mentions.members.first()} from ${members.size == 1 ? "" : "one of "}${inferred_members_text}.`);
+            util.sendTextMessage(channels["paranoia-plaza"], `:warning: Got ${newcomer_role} invite number ${invites} for ${message.mentions.members.first()} from ${members.size === 1 ? "" : "one of "}${inferred_members_text}.`);
         }
         return;
     }
 
     //copy new account joins from auth log to paranoia plaza
-    if (message.channel.id == channels["authentication-logs"].id) {
+    if (message.channel.id === channels["authentication-logs"].id) {
         if (!message.embeds) { //Stop chatting in the auth log channel :reeeee:
             return;
         }
@@ -431,7 +406,7 @@ client.on("message", (message) => {
     }
 
     // If not from Mee6 and contains mentions
-    if (!_.isEqual(message.author.id, "159985870458322944") && message.mentions.members.size) {
+    if (message.mentions.members.size && !_.isEqual(message.author.id, "159985870458322944") && !_.isEqual(message.channel.id, channels["lfp-contact"].id)) {
         // react with :pingangry: to users who mention someone with the Don't Ping role
         let dontPingRole = server.roles.find(r => _.isEqual(r.name, util.roles.DONTPING));
         const no_ping_mentions = message.mentions.members.filter(member => (member.roles.has(dontPingRole.id) && !_.isEqual(member.user, message.author)));
@@ -679,13 +654,13 @@ const cmd = {
             } else {
                 await member.addRole(warnRole1)
                     .then(() => {
-                        member.removeRole(innocentRole) 
+                        member.removeRole(innocentRole)
                             .catch(() => {
                                 util.log(`Failed to remove Innocent role from ${member}.`, 'Warn: remove Innocent role', util.logLevel.ERROR);
                                 err = true;
                             });
                         level = 1;
-                     })
+                    })
                     .catch(() => {
                         err = true;
                         util.log(`Failed to add Warning level 1 to ${member}.`, 'Warn: 0->1', util.logLevel.ERROR);
@@ -728,7 +703,7 @@ const cmd = {
             let newcomerRole = server.roles.find(role => role.name === "Newcomer");
             let newcomerMembers = server.roles.get(newcomerRole.id).members.map(m => m.user);
             _.each(newcomerMembers, (member, index) => {
-            util.log(" Clearing newcomer role from: " + member + " (" + (index+1) + "/" + newcomerMembers.length + ")", "clearNewcomer", util.logLevel.INFO);
+                util.log(" Clearing newcomer role from: " + member + " (" + (index+1) + "/" + newcomerMembers.length + ")", "clearNewcomer", util.logLevel.INFO);
                 try {
                     if ((new Date() - member.joinedAt)/1000/60 <= 10) { // joined less than 10 minutes ago
                         return;
@@ -845,7 +820,7 @@ const fnct = {
         } catch (e) {
             util.log('Failed to update server stats: ' + mode, 'Server Stats', util.logLevel.ERROR);
         }
-    }, 
+    },
     'approveChar': function(message, reaction, user) {
         try {
             if (_.isEqual(message.channel.name, channels.charSub.name) && util.isUserStaff(user)) {
@@ -868,8 +843,8 @@ const fnct = {
             }
         } catch (e) {
             util.log(e, 'approveCharacter', util.logLevel.ERROR);
-        } 
-    } 
+        }
+    }
 };
 
 const util = {
@@ -894,7 +869,7 @@ const util = {
     'isUserStaff': function (user) {
         let staffRole = server.roles.find(role => role.name === util.roles.STAFF || role.name === util.roles.TRIALMOD);
         return server.roles.get(staffRole.id).members.map(m => m.user).filter(staffMember => _.isEqual(staffMember, user)).length > 0;
-    }, 
+    },
 
     'roles': {
         'DONTPING': "DONT PING⛔",
@@ -904,7 +879,7 @@ const util = {
         'NEW': "Newcomer",
         'NSFW': "NSFW",
         'MUTED': "Muted",
-        'INNOCENT': "Innocent", 
+        'INNOCENT': "Innocent",
         'WARN_1': "Warned 1x",
         'WARN_2': "Warned 2x",
         'LVL': {
@@ -1032,7 +1007,7 @@ const util = {
         const level = parseInt(level_string.match(/\d+/g));
         const new_role = util.level_to_role(level);
 
-        const old_roles = member.roles.filter(role => _.contains(level_roles, role));
+        const old_roles = member.roles.filter(role => _.contains(util.roles.LVL, role));
         let role_gain_string;
         if (!old_roles.find(role => role == new_role)) {
             role_gain_string = `${new_role}`;
@@ -1045,41 +1020,45 @@ const util = {
         }
         const reason = `${user.username} gained level ${level}`;
 
-        //Note: Must add new role before removing old role because Yag adds lvl 0 role when no level role is present
-        const remove_roles_function = () => {
+        //Note: Need to be careful to add first and then remove, otherwise Yag adds the lvl0 role
+        const role_remover = () => {
             if (role_lose_string) {
                 member.removeRoles(old_roles, reason)
                 .then(() => {
                     message.react('✅').catch(console.error);
-                    util.log(`Removed role(s) ${role_lose_string} from ${user} because level ${level} because of message <${message.url}>.`, level_up_module, util.logLevel.INFO);
-                    //put the DM here because removing old roles is the last thing we do and at this point it has succeeded
-                    if (level === 5) {
-                        user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 5` in the Breeding Den Server and now you're able to join Voice Channels if you want to!" +
-                            "\n\n(_P.S. I'm a bot, so please don't reply!_)");
-                    } else if (level === 20) {
-                        user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 20` in the Breeding Den Server and now you've unlocked the <#560869811157073920> " +
-                            "and you're able to create your own cult, as long as certain criterias are met too!" +
-                            "For more detailed information, please check out the very top message in <#538901164897337347>" +
-                            "\nIf you're interested, simply ask a Staff member and they will guide you through the process!\n\n(_P.S. I'm a bot, so please don't reply!_)");
-                    }
+                    util.log(`Successfully removed ${role_lose_string} from ${user}\nMessage Link: <${message.url}>.`, level_up_module, util.logLevel.INFO);
                 })
                 .catch(error => {
-                    util.log(`Failed removing role(s) ${role_lose_string} because level ${level} because of message <${message.url}> from ${user} because of ${error}`, level_up_module, util.logLevel.ERROR);
+                    util.log(`Failed to remove ${role_lose_string} from ${user}\nMessage Link: <${message.url}>\nError: ${error}`, level_up_module, util.logLevel.ERROR);
                 });
             }
         };
+        // add role
         if (role_gain_string) {
             member.addRole(new_role, reason)
             .then(() => {
-                util.log(`Added role ${role_gain_string} to ${user} because level ${level} because of message <${message.url}>.`, level_up_module, util.logLevel.INFO);
-                remove_roles_function();
+                role_remover();
+                util.log(`Successfully added ${role_gain_string} to ${user}\nMessage Link: <${message.url}>.`, level_up_module, util.logLevel.INFO);
+                if (level === 5) {
+                    user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 5` in the Breeding Den Server! You're now able to submit characters and join Voice Channels if you want to!" +
+                        "\n\n(_P.S. I'm a bot, so please don't reply!_)");
+                } else if (level === 20) {
+                    user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 20` in the Breeding Den Server! You've unlocked the <#560869811157073920> " +
+                        "and you're able to create your own cult, as long as certain criterias are met too!" +
+                        "For more detailed information, please check out the very top message in <#538901164897337347>" +
+                        "\nIf you're interested, simply ask a Staff member and they will guide you through the process!\n\n(_P.S. I'm a bot, so please don't reply!_)");
+                } else if (level === 30) {
+                    user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 30` in the Breeding Den Server! You're now able to get yourself a __Custom Role__ if you want to!" +
+                        "\nSimply ask a Staff member and tell them the __Name__ and __Color__ (ideally in Hexcode) of the Custom role!\n\n(_P.S. I'm a bot, so please don't reply!_)");
+                }
             })
             .catch(error => {
-                util.log(`Failed adding role ${role_gain_string} because level ${level} because of message <${message.url}> to ${user} because of ${error}`, level_up_module, util.logLevel.ERROR);
+                util.log(`Failed to add ${role_gain_string} to ${user}\nMessage Link: <${message.url}>\nError: ${error}`, level_up_module, util.logLevel.ERROR);
             });
         }
         else {
-            remove_roles_function();
+            // remove role
+            role_remover();
         }
     },
 };
