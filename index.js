@@ -20,9 +20,9 @@ let server = _.isUndefined(localConfig) ? process.env.SERVER_ID : localConfig.SE
 let channels = {
     'main': "accalia-main",
     'level': "📈level-up-log",
-    'logs': "accalia-logs", 
+    'logs': "accalia-logs",
     'warnings': "🚨warnings",
-    'charSub': "📃character-submission", 
+    'charSub': "📃character-submission",
     'charArchive': "📚character-archive",
     'charIndex': "📕character-index",
     'reports': "📮reports-and-issues",
@@ -40,16 +40,44 @@ let channels = {
     'lfp-extreme': "✨lfp-extreme",
     'lfp-long': "📰lfp-long-term-plot",
     'lfp-rabbit': "📺lfp-vc-rabbit",
+    'nsfw-general': "🔞nsfw-general",
+    'nsfw-media': "👅nsfw-media",
+    'tinkering': "tinkering",
+    'authentication-logs': "🎫authentication-logs",
+    'paranoia-plaza': "🙈ashs-paranoia-plaza",
+};
+let level_roles = {
+    'LVL_0': "Lewd (Lvl 0+)",
+    'LVL_5': "Pervert (Lvl 5+)",
+    'LVL_10': "Tainted (Lvl 10+)",
+    'LVL_20': "Slut (Lvl 20+)",
+    'LVL_30': "Whore (Lvl 30+)",
+    'LVL_40': "Cumdump (Lvl 40+)",
+    'LVL_50': "Pornstar (Lvl 50+)",
+    'LVL_60': "Sex-Toy (Lvl 60+)",
+    'LVL_70': "Server Bus (Lvl 70+)",
+    'LVL_80': "Doesn't leave bed (Lvl 80+)",
+    'LVL_90': "Sperm Bank (Lvl 90+)",
+    'LVL_100': "Retired Pornstar (Lvl 100+)",
+};
+let roles = {
+    "No_Ping": "DONT PING⛔",
+    "Newcomer": "Newcomer",
+    "CustomRoles": "--Custom Roles--"
+};
+let emojis = {
+    "bancat": "bancat",
+    "pingmad": "pingmad",
+    "pingangry": "pingangry",
 };
 let lfpTimer = [];
 let lfpChannels = [];
 let AsheN;
 let lockdown = false;
 let disableMentions = true;
-let ongoingProcess = false;
-//let ping_violation_reaction_emoji = "535558794764222476"; //:pingangry:
-let ping_violation_reaction_emoji = "670647474784043028"; //:pingmad:
+let ping_violation_reaction_emoji = emojis.pingangry;
 const level_up_module = "Level roles";
+const link_regex = /((https?|ftp):\/\/|www\.)(\w.+\w\W?)/g; //source: https://support.discordapp.com/hc/en-us/community/posts/360036244152-Change-in-text-link-detection-RegEx
 
 const dbMod = {
     'warnUser': function (member, level, warner, reason) {
@@ -142,9 +170,12 @@ const startUpMod = {
             _.each(channels, function (channel, channelID) {
                 channels[channelID] = server.channels.find(ch => _.isEqual(ch.name, channels[channelID]));
             });
+            _.each(Object.keys(level_roles), role_name => level_roles[role_name] = server.roles.find(role => role.name === level_roles[role_name]));
+            _.each(Object.keys(roles), role_name => roles[role_name] = server.roles.find(role => role.name === roles[role_name]));
+            _.each(emojis, emojiname => emojis[emojiname] = server.emojis.find(emoji => emoji.name === emojiname));
             AsheN = client.users.find(user => _.isEqual(user.id, "528957906972835850")); //"105301872818028544"));
-            ping_violation_reaction_emoji = server.emojis.get(ping_violation_reaction_emoji);
             client.user.setActivity("Serving the Den").catch(util.reportToAsheN);
+            ping_violation_reaction_emoji = emojis[ping_violation_reaction_emoji];
             util.sendTextMessage(channels.main, startUpMessage);
             util.log("INITIALIZED.", "Startup", util.logLevel.INFO);
 
@@ -318,8 +349,76 @@ client.on("message", (message) => {
             });
     }
 
+    // delete links in nsfw-general
+    if (_.isEqual(message.channel.id, channels["nsfw-general"].id)) {
+        if (message.content.match(link_regex)) {
+            if (util.isStaff(message)) { //have mercy on staff and don't delete messages
+                message.react(emojis.bancat).catch(console.error);
+                return;
+            }
+            const logBody = `link in ${message.channel} from ${message.author}\\nMessage content: ${message}`;
+            message.delete()
+                .then(() => {
+                    util.log(`Removed ${logBody}`, 'Automatic Link Removal', util.logLevel.WARN);
+                })
+                .catch((e) => {
+                    util.log(`Failed to remove ${logBody}\nError: ${e.toString()}`, 'Automatic Link Removal', util.logLevel.ERROR);
+                });
+            util.sendTextMessage(message.channel, `${message.author} Sorry, no media or links of any kind in this channel. Put it in ${channels["nsfw-media"]} or another media channel please.`);
+            return;
+        }
+    }
+
+    // be paranoid about newcomers who invite people
+    if (_.isEqual(message.channel.id, channels.tinkering.id)) {
+        const invite_regex = /<@\d+> \*\*joined\*\*; Invited by \*\*.*\*\* \(\*\*\d+\*\* invites\)/g;
+        if (!message.content.match(invite_regex)) { //not an invite message
+            return;
+        }
+        const before_name = "> **joined**; Invited by **";
+        const after_name = "** (**";
+        const name_start_pos = message.content.indexOf(before_name) + before_name.length;
+        const name_end_pos = message.content.indexOf(after_name);
+        const name = message.content.substr(name_start_pos, name_end_pos - name_start_pos);
+        if (name === "DISBOARD" || name === "AsheN") { //Can't be paranoid about people joining via their invites. Or can we?
+            return;
+        }
+        const before_invites = before_name + name + "** (**";
+        const after_invites = "** invites)";
+        const before_invites_pos = message.content.indexOf(before_invites) + before_invites.length;
+        const after_invites_pos = message.content.indexOf(after_invites);
+        const invites = parseInt(message.content.substr(before_invites_pos, after_invites_pos - before_invites_pos));
+        const members = server.members.filter(member => member.user.username === name);
+        if (members.size === 0) {
+            util.sendTextMessage(channels.tinkering, `Failed figuring out who ${name} is.`);
+            return;
+        }
+        const inferred_members_text = members.reduce((member, result) => `${member} ${result}`, "").trim();
+        const newcomer_role_id = "595288534152118273";
+        const newcomer_role = server.roles.get(newcomer_role_id);
+        const newcomer_members = members.find(member => member.roles.has(newcomer_role_id));
+        if (newcomer_members) {
+            util.sendTextMessage(channels["paranoia-plaza"], `:warning: Got invite number ${invites} from ${name} which is ${members.size === 1 ? "" : "one of "}${newcomer_role} ${inferred_members_text}.`);
+        }
+        return;
+    }
+
+    //copy new account joins from auth log to paranoia plaza
+    if (message.channel.id === channels["authentication-logs"].id) {
+        if (!message.embeds) { //Stop chatting in the auth log channel :reeeee:
+            return;
+        }
+        message.embeds.forEach(embed => {
+            if (embed.description.indexOf("**NEW ACCOUNT**") > 0) {
+                channels["paranoia-plaza"].send(new DiscordJS.RichEmbed(embed))
+                .catch(console.error);
+            }
+        });
+        return;
+    }
+
     // If not from Mee6 and contains mentions
-    if (!_.isEqual(message.author.id, 159985870458322944) && message.mentions.members.size) {
+    if (message.mentions.members.size && !_.isEqual(message.author.id, "159985870458322944") && !_.isEqual(message.channel.id, "535135783330381835")) {
         // react with :pingangry: to users who mention someone with the Don't Ping role
         let dontPingRole = server.roles.find(r => _.isEqual(r.name, util.roles.DONTPING));
         const no_ping_mentions = message.mentions.members.filter(member => (member.roles.has(dontPingRole.id) && !_.isEqual(member.user, message.author)));
@@ -567,13 +666,13 @@ const cmd = {
             } else {
                 await member.addRole(warnRole1)
                     .then(() => {
-                        member.removeRole(innocentRole) 
+                        member.removeRole(innocentRole)
                             .catch(() => {
                                 util.log(`Failed to remove Innocent role from ${member}.`, 'Warn: remove Innocent role', util.logLevel.ERROR);
                                 err = true;
                             });
                         level = 1;
-                     })
+                    })
                     .catch(() => {
                         err = true;
                         util.log(`Failed to add Warning level 1 to ${member}.`, 'Warn: 0->1', util.logLevel.ERROR);
@@ -616,7 +715,7 @@ const cmd = {
             let newcomerRole = server.roles.find(role => role.name === "Newcomer");
             let newcomerMembers = server.roles.get(newcomerRole.id).members.map(m => m.user);
             _.each(newcomerMembers, (member, index) => {
-            util.log(" Clearing newcomer role from: " + member + " (" + (index+1) + "/" + newcomerMembers.length + ")", "clearNewcomer", util.logLevel.INFO);
+                util.log(" Clearing newcomer role from: " + member + " (" + (index+1) + "/" + newcomerMembers.length + ")", "clearNewcomer", util.logLevel.INFO);
                 try {
                     if ((new Date() - member.joinedAt)/1000/60 <= 10) { // joined less than 10 minutes ago
                         return;
@@ -733,7 +832,7 @@ const fnct = {
         } catch (e) {
             util.log('Failed to update server stats: ' + mode, 'Server Stats', util.logLevel.ERROR);
         }
-    }, 
+    },
     'approveChar': function(message, reaction, user) {
         try {
             if (_.isEqual(message.channel.name, channels.charSub.name) && util.isUserStaff(user)) {
@@ -756,8 +855,8 @@ const fnct = {
             }
         } catch (e) {
             util.log(e, 'approveCharacter', util.logLevel.ERROR);
-        } 
-    } 
+        }
+    }
 };
 
 const util = {
@@ -782,7 +881,7 @@ const util = {
     'isUserStaff': function (user) {
         let staffRole = server.roles.find(role => role.name === util.roles.STAFF || role.name === util.roles.TRIALMOD);
         return server.roles.get(staffRole.id).members.map(m => m.user).filter(staffMember => _.isEqual(staffMember, user)).length > 0;
-    }, 
+    },
 
     'roles': {
         'DONTPING': "DONT PING⛔",
@@ -792,7 +891,7 @@ const util = {
         'NEW': "Newcomer",
         'NSFW': "NSFW",
         'MUTED': "Muted",
-        'INNOCENT': "Innocent", 
+        'INNOCENT': "Innocent",
         'WARN_1': "Warned 1x",
         'WARN_2': "Warned 2x",
         'LVL': {
@@ -933,10 +1032,24 @@ const util = {
         }
         const reason = `${user.username} gained level ${level}`;
 
+        //Note: Need to be careful to add first and then remove, otherwise Yag adds the lvl0 role
+        const role_remover = () => {
+            if (role_lose_string) {
+                member.removeRoles(old_roles, reason)
+                .then(() => {
+                    message.react('✅').catch(console.error);
+                    util.log(`Successfully removed ${role_lose_string} from ${user}\nMessage Link: <${message.url}>.`, level_up_module, util.logLevel.INFO);
+                })
+                .catch(error => {
+                    util.log(`Failed to remove ${role_lose_string} from ${user}\nMessage Link: <${message.url}>\nError: ${error}`, level_up_module, util.logLevel.ERROR);
+                });
+            }
+        };
         // add role
         if (role_gain_string) {
             member.addRole(server.roles.find(r => _.isEqual(new_role, r.name)), reason)
             .then(() => {
+                role_remover();
                 util.log(`Successfully added ${role_gain_string} to ${user}\nMessage Link: <${message.url}>.`, level_up_module, util.logLevel.INFO);
                 if (level === 5) {
                     user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 5` in the Breeding Den Server! You're now able to submit characters and join Voice Channels if you want to!" +
@@ -955,17 +1068,9 @@ const util = {
                 util.log(`Failed to add ${role_gain_string} to ${user}\nMessage Link: <${message.url}>\nError: ${error}`, level_up_module, util.logLevel.ERROR);
             });
         }
-
-        // remove role
-        if (role_lose_string) {
-            member.removeRoles(old_roles, reason)
-                .then(() => {
-                    message.react('✅').catch(console.error);
-                    util.log(`Successfully removed ${role_lose_string} from ${user}\nMessage Link: <${message.url}>.`, level_up_module, util.logLevel.INFO);
-                })
-                .catch(error => {
-                    util.log(`Failed to remove ${role_lose_string} from ${user}\nMessage Link: <${message.url}>\nError: ${error}`, level_up_module, util.logLevel.ERROR);
-                });
+        else {
+            // remove role
+            role_remover();
         }
     },
 };
