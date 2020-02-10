@@ -39,7 +39,8 @@ let channels = {
     'lfp-bestiality': "🦄lfp-bestiality",
     'lfp-extreme': "✨lfp-extreme",
     'lfp-long': "📰lfp-long-term-plot",
-    'lfp-rabbit': "📺lfp-vc-rabbit",
+    'lfp-vc': "🎤lfp-vc",
+    'lfp-sfw': "🌺lfp-sfw",
     'nsfw-general': "🔞nsfw-general",
     'nsfw-media': "👅nsfw-media",
     'tinkering': "tinkering",
@@ -178,7 +179,8 @@ const startUpMod = {
             lfpChannels.push(channels["lfp-lesbian"]);
             lfpChannels.push(channels["lfp-long"]);
             lfpChannels.push(channels["lfp-male"]);
-            lfpChannels.push(channels["lfp-rabbit"]);
+            lfpChannels.push(channels["lfp-sfw"]);
+            lfpChannels.push(channels["lfp-vc"]);
             lfpChannels.push(channels["lfp-trans"]);
             lfpChannels.push(channels["lfp-vanilla"]);
 
@@ -540,9 +542,14 @@ client.on("message", (message) => {
                             target = "People who would like a long term and/or plot driven RP";
                             break;
                         case "vc":
-                            title = "VOICE CHATS / RABBIT / ETC.";
+                            title = "VOICE CHATS  / ETC.";
                             color = 0xA8A8A8;
-                            target = "People wanting to find others to go in a Voice Chat or Rabbit session or etc. with";
+                            target = "People wanting to find others to go in a Voice Chat session or etc. with";
+                            break;
+                        case "sfw":
+                            title = "SFW / SAFE FOR WORK / NON-SEXUAL";
+                            color = 0xCA2C92;
+                            target = "People who would like a sfw, non-sexual RP";
                             break;
                     }
 
