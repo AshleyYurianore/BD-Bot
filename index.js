@@ -572,7 +572,19 @@ client.on("message", (message) => {
                         ) 
                     ;
 
-                    channel.send(lfpEmbed);
+                    let lfpMsg =
+                        `>>> __**Looking for ${title} Channel Info**__\n` +
+                        `This channel is specifically for posts, which are **looking for ${title}**.\n\n` +
+                        `🔹 __What posts are to be expected and to be posted in this channel?__\n` +
+                        `LFP Ads, which explicitly state that they are **looking for ${title}**\n\n` +
+                        `🔹 __Target Audience for LFP posts:__\n` +
+                        `${target}\n\n` +
+                        `If you do see posts, which are __not clearly looking for these kinds of RP/things__ in this channel, **please** let the staff team know in ${channels.reports}!\n\n` +
+                        `If you want to **contact** someone who posted in this channel, **please check their DM Roles** first before doing so and please use ${channels["lfp-contact"]}!\n\n` +
+                        `*More info in:* ${channels["lfp-info"]}\n\n`
+                    ;
+
+                    channel.send(lfpMsg);
                 }, 2000);
             }
         });
