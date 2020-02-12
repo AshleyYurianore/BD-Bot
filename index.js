@@ -548,9 +548,9 @@ client.on("message", (message) => {
                             target = "People wanting to find others to go in a Voice Chat session or etc. with";
                             break;
                         case "sfw":
-                            title = "SFW / SAFE FOR WORK / NON-SEXUAL";
+                            title = "NON-EROTIC";
                             color = 0xCA2C92;
-                            target = "People who would like a sfw, non-sexual RP";
+                            target = "People who would like a non-erotic RP";
                             break;
                     }
 
