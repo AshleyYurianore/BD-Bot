@@ -473,8 +473,6 @@ client.on("message", (message) => {
             clearTimeout(lfpTimer[channel.name]);
         }
         lfpTimer[channel.name] = setTimeout(() => {
-            util.log('Sending lfp info in ' + channel, "lfpInfo", util.logLevel.INFO);
-
             channel.fetchMessages()
                 .then(messages => {
                     let msg = messages.filter(m => _.isEqual(m.author.id, client.user.id));
