@@ -467,7 +467,7 @@ client.on("message", (message) => {
         cmd.call(message);
     }
     // Post the LFP rules in LFP channels
-    else if (_.indexOf(lfpChannels, message.channel) < 0) {
+    else if (_.contains(lfpChannels, message.channel)) {
         const channel = message.channel;
         if (!_.isUndefined(lfpTimer[channel.name])) {
             clearTimeout(lfpTimer[channel.name]);
@@ -476,7 +476,7 @@ client.on("message", (message) => {
             channel.fetchMessages()
                 .then(messages => {
                     let msg = messages.filter(m => _.isEqual(m.author.id, client.user.id));
-                    if (msg.size != 1) {
+                    if (msg.size !== 1) {
                         util.log(`Deleting ${msg.size} of my messages in ${channel} which shouldn't happen.`, "lfpInfo", util.logLevel.WARN);
                     }
                     msg.forEach(m => m.delete());
