@@ -845,7 +845,7 @@ const cmd = {
                 else {
                     util.sendTextMessage(message.channel, new DiscordJS.RichEmbed().setDescription(`Invalid User: <@${snowflake}>`));
                 }
-            })
+            }).catch(error => util.sendTextMessage(message.channel, `Invalid user ID: <@${snowflake}>`));
         });
     },
 };
