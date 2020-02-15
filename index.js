@@ -1141,6 +1141,36 @@ const util = {
             role_remover();
         }
     },
+
+    'time': function(time_ms) {
+        let time = ~~(time_ms / 1000);
+        const s = ~~time % 60;
+        time /= 60;
+        const m = ~~time % 60;
+        time /= 60;
+        const h = ~~time % 24;
+        time /= 24;
+        const d = ~~time % 365;
+        time /= 365;
+        const y = ~~time;
+        let str = "";
+        if (y) {
+            str = `${y}y`;
+        }
+        if (d) {
+            str += ` ${d}d`;
+        }
+        if (h) {
+            str += ` ${h}h`;
+        }
+        if (m) {
+            str += ` ${m}m`;
+        }
+        if (s) {
+            str += ` ${s}s`;
+        }
+        return str.trim();
+    },
 };
 
 client.login(_.isUndefined(localConfig) ? process.env.BOT_TOKEN : localConfig.TOKEN);
