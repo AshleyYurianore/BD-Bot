@@ -8,12 +8,13 @@ const moment = require("moment");
 const assert = require('assert');
 const schedule = require('node-schedule');
 
+const debug = true;
+
 const MongoClient = require('mongodb').MongoClient;
-const db_name = (_.isUndefined(localConfig)) ? process.env.DB_NAME : localConfig.DB.NAME;
-const db_port = (_.isUndefined(localConfig)) ? process.env.DB_PORT : localConfig.DB.PORT;
+const db_name = (_.isUndefined(localConfig)) ? process.env.DB_NAME : debug ? localConfig.DB.TESTNAME : localConfig.DB.NAME;
 const db_user = (_.isUndefined(localConfig)) ? process.env.DB_USER : localConfig.DB.USER;
 const db_pw = (_.isUndefined(localConfig)) ? process.env.DB_PW : localConfig.DB.PW;
-const url = `mongodb://${db_user}:${db_pw}@ds1${db_port}.mlab.com:${db_port}/${db_name}`;
+const url = `mongodb+srv://${db_user}:${db_pw}@cluster0-c0kzw.mongodb.net/${db_name}?retryWrites=true&w=majority`;
 
 const prefix = _.isUndefined(localConfig) ? process.env.PREFIX : localConfig.PREFIX;
 let server = _.isUndefined(localConfig) ? process.env.SERVER_ID : localConfig.SERVER;
