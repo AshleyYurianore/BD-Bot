@@ -780,6 +780,74 @@ const cmd = {
             util.log(`Failed to process (${command})`, command, util.logLevel.ERROR);
         }
     },
+    'age': function (message) {
+        const snowflakes = (message.content.match(/\d+/g) || [message.author.id]).filter(match => match.length > 15);
+        snowflakes.forEach(async snowflake => {
+            const deconstructed_slowflake = DiscordJS.SnowflakeUtil.deconstruct(snowflake);
+            if (deconstructed_slowflake.timestamp === 1420070400000) { //that seems to be the default time when the ID was not found
+                util.sendTextMessage(message.channel, "Unknown ID");
+                return;
+            }
+            //Figure out the origin of the ID
+            let target_string;
+            if (server.members.get(snowflake)) { //is it a server member?
+                target_string = `member ${server.members.get(snowflake)}`;
+            }
+            else if (server.roles.get(snowflake)) { //a role?
+                const role = server.roles.get(snowflake);
+                if (role.id === server.id) { //the everyone role ID is the same as the server ID, let's assume they meant the server and not the role
+                    target_string = `server **${server.name}**`;
+                }
+                else { //a role that is not the everyone role
+                    target_string = `role ${server.roles.get(snowflake)}`;
+                }
+            }
+            else if (server.channels.get(snowflake)) { //a channel?
+                target_string = `channel ${server.channels.get(snowflake)}`;
+            }
+            else if (server.emojis.get(snowflake)) { //an emoji?
+                target_string = `emoji ${server.emojis.get(snowflake)}`;
+            }
+            else {
+                const user = await client.fetchUser(snowflake);
+                if (user) { //a user who is not a guild member?
+                    target_string = `user ${client.users.get(snowflake)}`;
+                }
+                else { //ok I give up
+                    //unfortunately we can't look up servers by ID
+                    target_string = `unknown ID **${snowflake}**`;
+                }
+            }
+            //add generic fields Created and Age
+            let embed = new DiscordJS.RichEmbed().setDescription(`Age of ${target_string}`);
+            embed.addField("Created", `${deconstructed_slowflake.date.toUTCString()}`);
+            embed.addField("Age", `${util.time((new Date).getTime() - deconstructed_slowflake.timestamp)}`);
+            const member = server.members.get(snowflake);
+            const member_age = member ? member.joinedAt : null;
+            if (member_age) { //add member fields Joined, Member Since and Eligible
+                const ancientTimeThreshold = new Date(server.createdTimestamp + (new Date() - server.createdTimestamp) / 5);
+                const ancientDate = new Date(ancientTimeThreshold);
+                const ancient_string = member_age.getTime() < ancientTimeThreshold ? "Yes" : `on ${ancientDate.toUTCString()} in ${util.time(member_age.getTime() - ancientTimeThreshold)}`;
+                embed.addField("Joined", `${member_age.toUTCString()}`);
+                embed.addField("Member Since", `${member_age.toUTCString()}`);
+                embed.addField(`Eligible For **${util.roles.ANCIENT}**`, `${ancient_string}`);
+            }
+            util.sendTextMessage(message.channel, embed);
+        });
+    },
+    'pfp': function (message) { //display profile picture of a user
+        const snowflakes = (message.content.match(/\d+/g) || [message.author.id]).filter(match => match.length > 15);
+        snowflakes.forEach(snowflake => {
+            client.fetchUser(snowflake).then(user => {
+                if (user) {
+                    util.sendTextMessage(message.channel, new DiscordJS.RichEmbed().setDescription(`${user}'s Avatar`).setImage(user.displayAvatarURL));
+                }
+                else {
+                    util.sendTextMessage(message.channel, new DiscordJS.RichEmbed().setDescription(`Invalid User: <@${snowflake}>`));
+                }
+            })
+        });
+    },
 };
 
 const fnct = {
