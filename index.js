@@ -809,7 +809,7 @@ const cmd = {
                 target_string = `emoji ${server.emojis.get(snowflake)}`;
             }
             else {
-                const user = await client.fetchUser(snowflake);
+                const user = await client.fetchUser(snowflake).catch(err => { return null; });
                 if (user) { //a user who is not a guild member?
                     target_string = `user ${client.users.get(snowflake)}`;
                 }
