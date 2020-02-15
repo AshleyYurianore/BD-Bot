@@ -826,8 +826,8 @@ const cmd = {
             const member_age = member ? member.joinedAt : null;
             if (member_age) { //add member fields Joined, Member Since and Eligible
                 const ancientTimeThreshold = new Date(server.createdTimestamp + (new Date() - server.createdTimestamp) / 5);
-                const ancientDate = new Date(ancientTimeThreshold);
-                const ancient_string = member_age.getTime() < ancientTimeThreshold ? "Yes" : `on ${ancientDate.toUTCString()} in ${util.time(member_age.getTime() - ancientTimeThreshold)}`;
+                const ancient_date = new Date(server.createdTimestamp + (member_age.getTime() - server.createdTimestamp) * 5);
+                const ancient_string = member_age.getTime() < ancientTimeThreshold ? "Yes" : `on ${ancient_date.toUTCString()} in ${util.time(ancient_date - new Date())}`;
                 embed.addField("Joined", `${member_age.toUTCString()}`);
                 embed.addField("Member Since", `${util.time(new Date() - member_age.getTime())}`);
                 embed.addField(`Eligible For **${util.roles.ANCIENT}**`, `${ancient_string}`);
