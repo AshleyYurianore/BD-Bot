@@ -829,7 +829,7 @@ const cmd = {
                 const ancientDate = new Date(ancientTimeThreshold);
                 const ancient_string = member_age.getTime() < ancientTimeThreshold ? "Yes" : `on ${ancientDate.toUTCString()} in ${util.time(member_age.getTime() - ancientTimeThreshold)}`;
                 embed.addField("Joined", `${member_age.toUTCString()}`);
-                embed.addField("Member Since", `${member_age.toUTCString()}`);
+                embed.addField("Member Since", `${util.time(new Date() - member_age.getTime())}`);
                 embed.addField(`Eligible For **${util.roles.ANCIENT}**`, `${ancient_string}`);
             }
             util.sendTextMessage(message.channel, embed);
