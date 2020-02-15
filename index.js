@@ -8,7 +8,7 @@ const moment = require("moment");
 const assert = require('assert');
 const schedule = require('node-schedule');
 
-const debug = true;
+const debug = false;
 
 const MongoClient = require('mongodb').MongoClient;
 const db_name = (_.isUndefined(localConfig)) ? process.env.DB_NAME : debug ? localConfig.DB.TESTNAME : localConfig.DB.NAME;
