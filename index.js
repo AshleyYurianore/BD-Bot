@@ -421,6 +421,10 @@ client.on("message", (message) => {
         }
     }
 
+    if (_.isEqual(message.channel.name, "📈level-up-log")) {
+        util.handle_level_up(message);
+    }
+
     if (message.isMentioned(client.user)) {
         const args = message.content.trim().split(/ +/g).splice(1);
         util.log(message.content, `mentioned by (${message.author})`, util.logLevel.INFO);
@@ -446,10 +450,7 @@ client.on("message", (message) => {
             }
         } // _.isEqual(message.author.id, "159985870458322944") &&
     }
-    else if (_.isEqual(message.channel.name, "📈level-up-log")) {
-        util.handle_level_up(message);
-    }
-    else if (_.isEqual(message.channel.name, "🚨reports-log")) {
+    if (_.isEqual(message.channel.name, "🚨reports-log")) {
         if (message.embeds && message.embeds[0].author && message.embeds[0].author.name.indexOf('Mute')) {
             let usr = message.embeds[0].fields[0].value;
             let usrid = usr.match(/([0-9])+/g)[0];
@@ -472,11 +473,11 @@ client.on("message", (message) => {
         }
     }
     // Prefix as first character -> command
-    else if (_.isEqual(message.content.indexOf(prefix), 0)) {
+    if (_.isEqual(message.content.indexOf(prefix), 0)) {
         cmd.call(message);
     }
     // Post the LFP rules in LFP channels
-    else if (_.contains(lfpChannels, message.channel)) {
+    if (_.contains(lfpChannels, message.channel)) {
         const channel = message.channel;
         if (!_.isUndefined(lfpTimer[channel.name])) {
             clearTimeout(lfpTimer[channel.name]);
