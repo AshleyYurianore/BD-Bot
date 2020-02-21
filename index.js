@@ -282,6 +282,11 @@ client.on("message", (message) => {
     if (message.channel.guild.id !== server.id) return; // Ignore non-main servers
     if (lockdown) return;
 
+    // Prefix as first character -> command
+    if (_.isEqual(message.content.indexOf(prefix), 0)) {
+        cmd.call(message);
+    }
+
     if (lfpChannels.includes(message.channel)) {
         let number_of_attached_images = message.attachments.filter(embed => !!embed.height).size;
         let violationMode = 0;
@@ -472,10 +477,7 @@ client.on("message", (message) => {
             }
         }
     }
-    // Prefix as first character -> command
-    if (_.isEqual(message.content.indexOf(prefix), 0)) {
-        cmd.call(message);
-    }
+
     // Post the LFP rules in LFP channels
     if (_.contains(lfpChannels, message.channel)) {
         const channel = message.channel;
