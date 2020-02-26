@@ -715,6 +715,7 @@ const cmd = {
             let errorCount = 0;
             let newcomerRole = server.roles.find(role => role.name === "Newcomer");
             let newcomerMembers = server.roles.get(newcomerRole.id).members.map(m => m.user);
+            let channel = message.channel ? message.channel : channels.main;
             _.each(newcomerMembers, (member, index) => {
                 util.log(" Clearing newcomer role from: " + member + " (" + (index+1) + "/" + newcomerMembers.length + ")", "clearNewcomer", util.logLevel.INFO);
                 try {
@@ -744,12 +745,12 @@ const cmd = {
                     if (index+1 === newcomerMembers.length) {
                         let logText = successCount + '/' + (successCount + errorCount) + " users cleared of Newcomer role. " + kickCount + " users kicked from not having the NSFW role until now.";
                         util.log(logText, 'clearNewcomer', util.logLevel.INFO);
-                        message.channel.send(logText);
+                        channel.send(logText);
                     }
                 }
             });
             if (newcomerMembers.length === 0) {
-                message.channel.send("0" + " Newcomers found.");
+                channel.send("0" + " Newcomers found.");
             }
         }
     },
@@ -786,8 +787,8 @@ const cmd = {
     'age': function (message) {
         const snowflakes = (message.content.match(/\d+/g) || [message.author.id]).filter(match => match.length > 15);
         snowflakes.forEach(async snowflake => {
-            const deconstructed_slowflake = DiscordJS.SnowflakeUtil.deconstruct(snowflake);
-            if (deconstructed_slowflake.timestamp === 1420070400000) { //that seems to be the default time when the ID was not found
+            const deconstructed_snowflake = DiscordJS.SnowflakeUtil.deconstruct(snowflake);
+            if (deconstructed_snowflake.timestamp === 1420070400000) { //that seems to be the default time when the ID was not found
                 util.sendTextMessage(message.channel, "Unknown ID");
                 return;
             }
@@ -823,8 +824,8 @@ const cmd = {
             }
             //add generic fields Created and Age
             let embed = new DiscordJS.RichEmbed().setDescription(`Age of ${target_string}`);
-            embed.addField("Created", `${deconstructed_slowflake.date.toUTCString()}`);
-            embed.addField("Age", `${util.time((new Date).getTime() - deconstructed_slowflake.timestamp)}`);
+            embed.addField("Created", `${deconstructed_snowflake.date.toUTCString()}`);
+            embed.addField("Age", `${util.time((new Date).getTime() - deconstructed_snowflake.timestamp)}`);
             const member = server.members.get(snowflake);
             const member_age = member ? member.joinedAt : null;
             if (member_age) { //add member fields Joined, Member Since and Eligible
@@ -900,7 +901,6 @@ const fnct = {
             });
         } catch (e) {
             util.log(`Failed to update server stats for ${modes}: ${e}`, 'Server Stats', util.logLevel.ERROR);
-            return;
         }
         util.log('Successfully updated server stats! (' + modes + ')', 'Server Stats', util.logLevel.INFO);
     },
