@@ -921,6 +921,9 @@ const fnct = {
                         if (msgType === 1) {
                             channels.charIndex.send(`\`${message.author} Your character has been approved/updated and can be found in the index under \"\"\``);
                         }
+                        let msgImages = msg.attachments.map(a => a.url);
+                        let msgImagesString = "";
+                        _.each(msgImages, imgUrl => msgImagesString += imgUrl + "\n");
                         channels.charIndex.send(`\`r!addchar \"charName\"\n${message.content}\n${msgImagesString}\``);
                     });
             }
