@@ -852,6 +852,43 @@ const cmd = {
             }).catch(error => util.sendTextMessage(message.channel, `Invalid user ID: <@${snowflake}>`));
         });
     },
+    'slowmode': function (message) {
+        if (!util.isStaff(message)) {
+            util.sendTextMessage(message.channel, `${message.author} Too slow!`);
+            return;
+        }
+        if (message.channel.setRateLimitPerUser == null) {
+            util.sendTextMessage(message.channel, `Error: Command unavailable in this discord.js version. Required version: 11.5.0+`);
+            return;
+        }
+        const matches = message.content.match(/\d+/g);
+        if ((matches || []).length == 0) {
+            util.sendTextMessage(message.channel, `Error: Failed parsing channel. Example usage: ${"`"}slowmode #channel 3h 5m 2s${"`"}`);
+            return;
+        }
+        const target_channel = server.channels.get(matches[0]);
+        if (target_channel == null) {
+            util.sendTextMessage(message.channel, `Error: Failed finding channel <#${matches[0]}>`);
+            return;
+        }
+        const hours = parseInt(message.content.match(/\d+h/g) || "0");
+        const minutes = parseInt(message.content.match(/\d+m/g) || "0");
+        const seconds = parseInt(message.content.match(/\d+s/g) || "0");
+        const time_s = hours * 60 * 60 + minutes * 60 + seconds;
+        const time_str = `${hours}h ${minutes}m ${seconds}s`;
+        target_channel.setRateLimitPerUser(time_s, `Set by @${message.author.tag} in #${message.channel.name}`)
+            .then(() => {
+                util.sendTextMessage(message.channel, `Successfully set slowmode in ${target_channel} to ${time_str}.`);
+                util.log(`${message.author} set the slowmode in ${target_channel} to ${time_str}.`, `Channel Administration`, util.logLevel.INFO);
+            })
+            .catch(error => {
+                util.sendTextMessage(message.channel, `Failed setting slowmode to ${time_str} because of:\n${error}`);
+                util.log(`${message.author} failed setting slowmode in ${target_channel} to ${time_str} because of:\n${error}`, `Channel Administration`, util.logLevel.ERROR);
+            });
+    },
+    'sm': function (message) {
+        cmd.slowmode(message);
+    }
 };
 
 const fnct = {
