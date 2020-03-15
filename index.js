@@ -267,6 +267,16 @@ client.on('raw', packet => {
     });
 });
 
+client.on("channelUpdate", (oldChannel, newChannel) => {
+    if (newChannel.guild.id !== server.id) return; // Ignore non-main servers
+    if (oldChannel.parent.id !== newChannel.parent.id) {
+        util.log(`Channel ${newChannel} was moved! Category ${oldChannel.parent} -> ${newChannel.parent}`, "Channel Position", util.logLevel.WARN);
+    }
+    else if (oldChannel.position !== newChannel.position) {
+        util.log(`Channel ${newChannel} was moved! Position ${oldChannel.position} -> ${newChannel.position}`, "Channel Position", util.logLevel.WARN);
+    }
+});
+
 client.on("message", (message) => {
     if (_.isEqual(message.author.username, client.user.username)) return;
     if (message.author.bot) {
