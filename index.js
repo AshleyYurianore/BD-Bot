@@ -962,7 +962,7 @@ const util = {
                 channel.stopTyping();
             }, 500);
         } catch (e) {
-            this.log('Failed to send message: ' + message.slice(1980), this.logLevel.ERROR);
+            this.log('Failed to send message: ' + message.slice(1970), this.logLevel.ERROR);
             channel.stopTyping();
         }
     },
