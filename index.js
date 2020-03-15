@@ -369,7 +369,7 @@ client.on("message", (message) => {
         const name_start_pos = message.content.indexOf(before_name) + before_name.length;
         const name_end_pos = message.content.indexOf(after_name);
         const name = message.content.substr(name_start_pos, name_end_pos - name_start_pos);
-        if (name === "DISBOARD" || name === "AsheN") { //Can't be paranoid about people joining via their invites. Or can we?
+        if (name === "[!d] DISBOARD" || name === "AsheN") { //Can't be paranoid about people joining via their invites. Or can we? :tinfoilhat:
             return;
         }
         const before_invites = before_name + name + "** (**";
@@ -377,17 +377,18 @@ client.on("message", (message) => {
         const before_invites_pos = message.content.indexOf(before_invites) + before_invites.length;
         const after_invites_pos = message.content.indexOf(after_invites);
         const invites = parseInt(message.content.substr(before_invites_pos, after_invites_pos - before_invites_pos));
-        const members = server.members.filter(member => member.user.username === name);
+        const members = server.members.filter(member => member.displayName === name);
         if (members.size === 0) {
-            util.sendTextMessage(channels.tinkering, `Failed figuring out who ${name} is.`);
+            //Didn't find the user. This happens when the inviter left or Invite Manager didn't notice that someone changed their Discord name.
+            util.sendTextMessage(channels.tinkering, `Failed figuring out who **${name}** is.`);
             return;
         }
         const inferred_members_text = members.reduce((member, result) => `${member} ${result}`, "").trim();
-        const newcomer_role_id = "595288534152118273";
-        const newcomer_role = server.roles.get(newcomer_role_id);
-        const newcomer_members = members.find(member => member.roles.has(newcomer_role_id));
-        if (newcomer_members) {
-            util.sendTextMessage(channels["paranoia-plaza"], `:warning: Got ${newcomer_role} invite number ${invites} for ${message.mentions.members.first()} from ${members.size === 1 ? "" : "one of "}${inferred_members_text}.`);
+        util.sendTextMessage(channels.tinkering, new DiscordJS.RichEmbed().setDescription(`Invited by ${inferred_members_text}`));
+        //warn if any of the potentials are newer than 1 day
+        const newcomer_member = members.find(member => member.joinedTimestamp > new Date() - 1000*60*60*24);
+        if (newcomer_member) {
+            util.sendTextMessage(channels["paranoia-plaza"], new DiscordJS.RichEmbed().setDescription(`:warning: Got invite number ${invites} for ${message.mentions.members.first()} from recent member ${members.size === 1 ? "" : "one of "}${inferred_members_text}.`));
         }
         return;
     }
