@@ -1075,6 +1075,11 @@ const cmd = {
         });
     },
     'audit': function (message) {
+        if (!util.isStaff(message)) {
+            util.sendTextMessage(message.channel, `${message.author} You audition for a porn movie where you get used like a slut.\n` +
+                `The audition video sells well, but you never hear from them again.`);
+            return;
+        }
         const snowflakes = (message.content.match(/\d+/g) || [message.author.id]).filter(match => match.length > 15);
         snowflakes.forEach(async snowflake => {
             if (server.members.has(snowflake)) { //is it a server member?
