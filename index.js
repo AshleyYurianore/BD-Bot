@@ -857,18 +857,18 @@ const cmd = {
             util.sendTextMessage(message.channel, `${message.author} Too slow!`);
             return;
         }
-        if (message.channel.setRateLimitPerUser == null) {
+        if (message.channel.setRateLimitPerUser === null) {
             util.sendTextMessage(message.channel, `Error: Command unavailable in this discord.js version. Required version: 11.5.0+`);
             return;
         }
         const matches = message.content.match(/\d+/g);
-        if ((matches || []).length == 0) {
-            util.sendTextMessage(message.channel, `Error: Failed parsing channel. Example usage: ${"`"}slowmode #channel 3h 5m 2s${"`"}`);
+        if ((matches || []).length === 0) {
+            util.sendTextMessage(message.channel, `Error: Failed parsing channel. Example usage: \`slowmode #channel 3h 5m 2s\``);
             return;
         }
         const target_channel = server.channels.get(matches[0]);
-        if (target_channel == null) {
-            util.sendTextMessage(message.channel, `Error: Failed finding channel <#${matches[0]}>`);
+        if (target_channel === undefined) {
+            util.sendTextMessage(message.channel, `Error: Failed finding channel \`<#${matches[0]}>\``);
             return;
         }
         const hours = parseInt(message.content.match(/\d+h/g) || "0");
