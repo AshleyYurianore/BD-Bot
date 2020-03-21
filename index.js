@@ -940,7 +940,7 @@ const split_text_message = message => {
         message_pieces = DiscordJS.util.splitMessage(message, {char: ' '});
     }
     return Array.isArray(message_pieces) ? message_pieces : [message_pieces]; //always return an array
-}
+};
 
 const util = {
     'sendTextMessage': function (channel, message, embed) {
