@@ -696,7 +696,7 @@ const audit_changes_to_string = changes => {
             curr += `${get_permission_diff_string(change.old, change.new)}`;
         }
         else if (change.key === "color") {
-            curr += `#${change.old.toString(16)}->#${change.new.toString(16)}`;
+            curr += `#${change.old.toString(16)}->#${change.new.toString(16)}`; 
         }
         else {
             curr += change.old === null ? "" : `${change.old}`;
