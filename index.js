@@ -1455,23 +1455,19 @@ const util = {
         const d = ~~time % 365;
         time /= 365;
         const y = ~~time;
-        let str = "";
         if (y) {
-            str = `${y}y`;
+            return `${y}y ${d}d`;
         }
         if (d) {
-            str += ` ${d}d`;
+            return `${d}d ${h}h`;
         }
         if (h) {
-            str += ` ${h}h`;
+            return `${h}h ${m}m`;
         }
         if (m) {
-            str += ` ${m}m`;
+            return `${m}m ${s}s`;
         }
-        if (s) {
-            str += ` ${s}s`;
-        }
-        return str.trim();
+        return `${s}s`;
     },
 };
 
