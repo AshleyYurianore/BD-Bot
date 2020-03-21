@@ -379,7 +379,7 @@ client.on("message", (message) => {
         const name_start_pos = message.content.indexOf(before_name) + before_name.length;
         const name_end_pos = message.content.indexOf(after_name);
         const name = message.content.substr(name_start_pos, name_end_pos - name_start_pos);
-        if (name === "DISBOARD" || name === "AsheN") { //Can't be paranoid about people joining via their invites. Or can we?
+        if (name === "[!d] DISBOARD" || name === "AsheN") { //Can't be paranoid about people joining via their invites. Or can we? :tinfoilhat:
             return;
         }
         const before_invites = before_name + name + "** (**";
@@ -387,17 +387,18 @@ client.on("message", (message) => {
         const before_invites_pos = message.content.indexOf(before_invites) + before_invites.length;
         const after_invites_pos = message.content.indexOf(after_invites);
         const invites = parseInt(message.content.substr(before_invites_pos, after_invites_pos - before_invites_pos));
-        const members = server.members.filter(member => member.user.username === name);
+        const members = server.members.filter(member => member.displayName === name);
         if (members.size === 0) {
-            util.sendTextMessage(channels.tinkering, `Failed figuring out who ${name} is.`);
+            //Didn't find the user. This happens when the inviter left or Invite Manager didn't notice that someone changed their Discord name.
+            util.sendTextMessage(channels.tinkering, `Failed figuring out who **${name}** is.`);
             return;
         }
         const inferred_members_text = members.reduce((member, result) => `${member} ${result}`, "").trim();
-        const newcomer_role_id = "595288534152118273";
-        const newcomer_role = server.roles.get(newcomer_role_id);
-        const newcomer_members = members.find(member => member.roles.has(newcomer_role_id));
-        if (newcomer_members) {
-            util.sendTextMessage(channels["paranoia-plaza"], `:warning: Got ${newcomer_role} invite number ${invites} for ${message.mentions.members.first()} from ${members.size === 1 ? "" : "one of "}${inferred_members_text}.`);
+        util.sendTextMessage(channels.tinkering, new DiscordJS.RichEmbed().setDescription(`Invited by ${inferred_members_text}`));
+        //warn if any of the potentials are newer than 1 day
+        const newcomer_member = members.find(member => member.joinedTimestamp > new Date() - 1000*60*60*24);
+        if (newcomer_member) {
+            util.sendTextMessage(channels["paranoia-plaza"], new DiscordJS.RichEmbed().setDescription(`:warning: Got invite number ${invites} for ${message.mentions.members.first()} from recent member ${members.size === 1 ? "" : "one of "}${inferred_members_text}.`));
         }
         return;
     }
@@ -611,6 +612,228 @@ client.on("message", (message) => {
         }, 2000);
     }
 });
+
+const get_permission_diff_string = (old_permissions, new_permissions) => {
+    let added = "";
+    let removed = "";
+    const permissions = [
+        DiscordJS.Permissions.FLAGS.ADMINISTRATOR,
+        DiscordJS.Permissions.FLAGS.CREATE_INSTANT_INVITE,
+        DiscordJS.Permissions.FLAGS.KICK_MEMBERS,
+        DiscordJS.Permissions.FLAGS.BAN_MEMBERS,
+        DiscordJS.Permissions.FLAGS.MANAGE_CHANNELS,
+        DiscordJS.Permissions.FLAGS.MANAGE_GUILD,
+        DiscordJS.Permissions.FLAGS.ADD_REACTIONS,
+        DiscordJS.Permissions.FLAGS.VIEW_AUDIT_LOG,
+        DiscordJS.Permissions.FLAGS.PRIORITY_SPEAKER,
+        DiscordJS.Permissions.FLAGS.VIEW_CHANNEL,
+        DiscordJS.Permissions.FLAGS.READ_MESSAGES,
+        DiscordJS.Permissions.FLAGS.SEND_MESSAGES,
+        DiscordJS.Permissions.FLAGS.SEND_TTS_MESSAGES,
+        DiscordJS.Permissions.FLAGS.MANAGE_MESSAGES,
+        DiscordJS.Permissions.FLAGS.EMBED_LINKS,
+        DiscordJS.Permissions.FLAGS.ATTACH_FILES,
+        DiscordJS.Permissions.FLAGS.READ_MESSAGE_HISTORY,
+        DiscordJS.Permissions.FLAGS.MENTION_EVERYONE,
+        DiscordJS.Permissions.FLAGS.USE_EXTERNAL_EMOJIS,
+        DiscordJS.Permissions.FLAGS.EXTERNAL_EMOJIS,
+        DiscordJS.Permissions.FLAGS.CONNECT,
+        DiscordJS.Permissions.FLAGS.SPEAK,
+        DiscordJS.Permissions.FLAGS.MUTE_MEMBERS,
+        DiscordJS.Permissions.FLAGS.DEAFEN_MEMBERS,
+        DiscordJS.Permissions.FLAGS.MOVE_MEMBERS,
+        DiscordJS.Permissions.FLAGS.USE_VAD,
+        DiscordJS.Permissions.FLAGS.CHANGE_NICKNAME,
+        DiscordJS.Permissions.FLAGS.MANAGE_NICKNAMES,
+        DiscordJS.Permissions.FLAGS.MANAGE_ROLES,
+        DiscordJS.Permissions.FLAGS.MANAGE_WEBHOOKS,
+        DiscordJS.Permissions.FLAGS.MANAGE_EMOJIS,
+    ];
+    const permissions_strings = [
+        "Administrator",
+        "Create Instant Invite",
+        "Kick Members",
+        "Ban Members",
+        "Manage Channels",
+        "Manage Server",
+        "Add Reactions",
+        "View Audit Log",
+        "Priority Speaker",
+        "View Channels",
+        "Read Messages",
+        "Send Messages",
+        "Send Text To Speech Messages",
+        "Manage Messages",
+        "Embed Links",
+        "Attach Files",
+        "Read Message History",
+        "Mention Everyone",
+        "Use External Emojis",
+        "External Emojis",
+        "Connect To VC",
+        "Speak In VC",
+        "Mute Members in VC",
+        "Deafen Members in VC",
+        "Move Members in VC",
+        "Use VAD",
+        "Chane Nickname",
+        "Manage Nicknames",
+        "Manage Roles",
+        "Manage Webhooks",
+        "Manage Emojis",
+    ];
+    _.forEach(permissions, (permission, index) => {
+        if ((old_permissions & permission) !== 0 && (new_permissions & permission) === 0) {
+            removed += permissions_strings[index] + ", ";
+        }
+        if ((old_permissions & permission) === 0 && (new_permissions & permission) !== 0) {
+            added += permissions_strings[index] + ", ";
+        }
+    });
+    let result = "";
+    if (added.length) {
+        result += "Added Permission(s): *" + added.slice(0, -2) + "* ";
+    }
+    if (removed.length) {
+        result += "Removed Permission(s): *" + removed.slice(0, -2) + "* ";
+    }
+    return result;
+};
+
+const audit_changes_to_string = changes => {
+    return `${_.reduce(changes, (curr, change) => {
+        curr += change.key ? `${change.key}: ` : "";
+        if (change.key === "permissions") {
+            curr += `${get_permission_diff_string(change.old, change.new)}`;
+        }
+        else if (change.key === "color") {
+            curr += `#${change.old.toString(16)}->#${change.new.toString(16)}`; 
+        }
+        else {
+            curr += change.old === null ? "" : `${change.old}`;
+            curr += (change.old !== null && change.new !== null) ? "->" : "";
+            curr += change.new === null ? "" : `${change.new}`;
+        }
+        return curr + " ";
+    }, "")}`;
+};
+
+const audits_to_string = (audits, snowflake) => {
+    return audits.entries.reduce((current, audit) => {
+        if (!audit.target || audit.target.id !== snowflake) { //not an entry where something was done to the user
+            return current;
+        }
+        current += `**${util.time(new Date() - audit.createdAt)} ago:** `;
+        if (audit.action === "MEMBER_ROLE_UPDATE") {
+            const action = audit.changes[0].key === "$add" ? "added" : "removed";
+            current += `${audit.executor} ${action} role ${server.roles.has(audit.changes[0].new[0].id) ? `<@&${audit.changes[0].new[0].id}>` : audit.changes[0].new[0].name}`;
+        }
+        else if (audit.action === "MEMBER_UPDATE") {
+            current += `${audit.executor} changed nickname from ${audit.changes[0].old || "none"} to ${audit.changes[0].new || "none"}`;
+        }
+        else if (audit.action === "MEMBER_KICK") {
+            current += `Was kicked by ${audit.executor}`;
+        }
+        else if (audit.action === "CHANNEL_CREATE") {
+            current += `Was created by ${audit.executor}`;
+        }
+        else if (audit.action === "CHANNEL_OVERWRITE_UPDATE") {
+            current += `Permissions updated by ${audit.executor}: ${get_permission_diff_string(audit.changes[0].old, audit.changes[0].new)}`;
+        }
+        else if (audit.action === "CHANNEL_UPDATE") {
+            current += `${audit.executor} updated ${audit_changes_to_string(audit.changes)}`;
+        }
+        else if (audit.action === "ROLE_UPDATE") {
+            current += `${audit.executor} ${audit_changes_to_string(audit.changes)}`;
+        }
+        else if (audit.action === "EMOJI_CREATE") {
+            current += `${audit.executor} created emoji. ${audit_changes_to_string(audit.changes)}`;
+        }
+        else if (audit.action === "GUILD_UPDATE") {
+            current += `${audit.executor} updated server ${audit_changes_to_string(audit.changes)}`;
+        }
+        else if (audit.action === "MEMBER_BAN_ADD") {
+            current += `Banned by ${audit.executor}`;
+        }
+        else if (audit.action === "MEMBER_BAN_REMOVE") {
+            current += `Unbanned by ${audit.executor}`;
+        }
+        else {
+            current += `${audit.executor} performed `;
+            current += `__Action__: ${audit.action} `;
+            if (audit.changes) {
+                current += `__Changes__: `;
+                current += audit_changes_to_string(audit.changes);
+            }
+            if (audit.extra) {
+                if (audit.changes) {
+                    current += " ";
+                }
+                current += `__Extra__: `;
+                if (audit.extra.setMentionable || audit.extra.kick) {
+                    //the extra is a role or a member
+                    current += `${audit.extra}`;
+                }
+                else {
+                    //the extra is an object
+                    current += `{${_.reduce(Object.keys(audit.extra),
+                        (current, key) => current + `${key}: ${audit.extra[key]} `, "")}}`;
+                }
+            }
+        }
+        if (audit.extra) {
+            current += `__Extra__: `;
+            if (audit.extra.setMentionable || audit.extra.kick) {
+                //the extra is a role or a member
+                current += `${audit.extra}`;
+            }
+            else {
+                //the extra is an object
+                current += `{${_.reduce(Object.keys(audit.extra),
+                    (current, key) => current + `${key}: ${audit.extra[key]} `, "")}} `;
+            }
+        }
+        if (audit.reason) {
+            current += ` because ${audit.reason}`;
+        }
+        return current + "\n";
+    }, "");
+};
+
+const audit_send_result = (target_string, string, channel) => {
+    const result_string = `**Audit for ${target_string}**:\n` + string;
+    let message_pieces = DiscordJS.util.splitMessage(result_string);
+    if (!Array.isArray(message_pieces)) {
+        message_pieces = [message_pieces];
+    }
+    _.forEach(message_pieces, message_piece => {
+        channel.send(new DiscordJS.RichEmbed().setDescription(message_piece));
+    });
+};
+
+const audit_log_search = (target_string, message, snowflake, result_string, latest_entry, counter) => {
+    if (!latest_entry) {
+        message.channel.startTyping();
+    }
+    server.fetchAuditLogs(latest_entry ? {limit: 100, before: latest_entry} : {limit: 100})
+    .then(audits => {
+        const new_results = audits_to_string(audits, snowflake);
+        result_string += new_results;
+        if (result_string.length > 1500 || audits.entries.size < 100 || counter > 100) {
+            audit_send_result(target_string, result_string, message.channel);
+            message.channel.stopTyping();
+        }
+        else {
+            assert(audits.entries.lastKey());
+            audit_log_search(target_string, message, snowflake, result_string, audits.entries.lastKey(), counter + 1 || 1);
+        }
+    }).catch(error => {
+        message.channel.send(new DiscordJS.RichEmbed()
+        .setDescription(`Results so far for ${target_string}:\n${result_string}`)
+        .setAuthor(`Failed fetching more audits because ${error}`));
+        message.channel.stopTyping();
+    });
+};
 
 const cmd = {
     'ping': async function (message) {
@@ -862,6 +1085,79 @@ const cmd = {
             }).catch(error => util.sendTextMessage(message.channel, `Invalid user ID: <@${snowflake}>`));
         });
     },
+    'audit': function (message) {
+        if (!util.isStaff(message)) {
+            util.sendTextMessage(message.channel, `${message.author} You audition for a porn movie where you get used like a slut.\n` +
+                `The audition video sells well, but you never hear from them again.`);
+            return;
+        }
+        const snowflakes = (message.content.match(/\d+/g) || [message.author.id]).filter(match => match.length > 15);
+        snowflakes.forEach(async snowflake => {
+            if (server.members.has(snowflake)) { //is it a server member?
+                audit_log_search(`member ${server.members.get(snowflake)}`, message, snowflake, "");
+            }
+            else if (server.roles.has(snowflake)) { //a role?
+                if (snowflake === server.defaultRole.id) {
+                    audit_log_search(`role ${server.roles.get(snowflake)} / server ${server.name}`, message, snowflake, "");
+                }
+                else {
+                    audit_log_search(`role ${server.roles.get(snowflake)}`, message, snowflake, "");
+                }
+            }
+            else if (server.channels.has(snowflake)) { //a channel?
+                audit_log_search(`channel ${server.channels.get(snowflake)}`, message, snowflake, "");
+            }
+            else if (server.emojis.has(snowflake)) { //an emoji?
+                audit_log_search(`emoji ${server.emojis.get(snowflake)}`, message, snowflake, "");
+            }
+            else {
+                const user = await client.fetchUser(snowflake).catch(err => { return null; });
+                if (user) { //a user who is not a guild member?
+                    audit_log_search(`user ${client.users.get(snowflake)}`, message, snowflake, "");
+                }
+                else { //ok I give up
+                    util.sendTextMessage(message.channel, new DiscordJS.RichEmbed().setDescription(`Wtf is that ID?`));
+                }
+            }
+        });
+    },
+    'slowmode': function (message) {
+        if (!util.isStaff(message)) {
+            util.sendTextMessage(message.channel, `${message.author} Too slow!`);
+            return;
+        }
+        if (message.channel.setRateLimitPerUser === null) {
+            util.sendTextMessage(message.channel, `Error: Command unavailable in this discord.js version. Required version: 11.5.0+`);
+            return;
+        }
+        const matches = message.content.match(/\d+/g);
+        if ((matches || []).length === 0) {
+            util.sendTextMessage(message.channel, `Error: Failed parsing channel. Example usage: \`slowmode #channel 3h 5m 2s\``);
+            return;
+        }
+        const target_channel = server.channels.get(matches[0]);
+        if (target_channel === undefined) {
+            util.sendTextMessage(message.channel, `Error: Failed finding channel \`<#${matches[0]}>\``);
+            return;
+        }
+        const hours = parseInt(message.content.match(/\d+h/g) || "0");
+        const minutes = parseInt(message.content.match(/\d+m/g) || "0");
+        const seconds = parseInt(message.content.match(/\d+s/g) || "0");
+        const time_s = hours * 60 * 60 + minutes * 60 + seconds;
+        const time_str = `${hours}h ${minutes}m ${seconds}s`;
+        target_channel.setRateLimitPerUser(time_s, `Set by @${message.author.tag} in #${message.channel.name}`)
+            .then(() => {
+                util.sendTextMessage(message.channel, `Successfully set slowmode in ${target_channel} to ${time_str}.`);
+                util.log(`${message.author} set the slowmode in ${target_channel} to ${time_str}.`, `Channel Administration`, util.logLevel.INFO);
+            })
+            .catch(error => {
+                util.sendTextMessage(message.channel, `Failed setting slowmode to ${time_str} because of:\n${error}`);
+                util.log(`${message.author} failed setting slowmode in ${target_channel} to ${time_str} because of:\n${error}`, `Channel Administration`, util.logLevel.ERROR);
+            });
+    },
+    'sm': function (message) {
+        cmd.slowmode(message);
+    }
 };
 
 const fnct = {
@@ -931,6 +1227,9 @@ const fnct = {
                         if (msgType === 1) {
                             channels.charIndex.send(`\`${message.author} Your character has been approved/updated and can be found in the index under \"\"\``);
                         }
+                        let msgImages = msg.attachments.map(a => a.url);
+                        let msgImagesString = "";
+                        _.each(msgImages, imgUrl => msgImagesString += imgUrl + "\n");
                         channels.charIndex.send(`\`r!addchar \"charName\"\n${message.content}\n${msgImagesString}\``);
                     });
             }
@@ -940,18 +1239,40 @@ const fnct = {
     }
 };
 
+const split_text_message = message => {
+    let message_pieces;
+    try {
+        //try splitting after newlines
+        message_pieces = DiscordJS.util.splitMessage(message);
+    } catch (error) {
+        //fall back to splitting after spaces
+        message_pieces = DiscordJS.util.splitMessage(message, {char: ' '});
+    }
+    return Array.isArray(message_pieces) ? message_pieces : [message_pieces]; //always return an array
+};
+
 const util = {
-    'sendTextMessage': function (channel, message) {
+    'sendTextMessage': function (channel, message, embed) {
         try {
-            if (channel) {
-                channel.startTyping();
-                setTimeout(function(){
-                    channel.send(message);
-                    channel.stopTyping(true);
-                }, 1500);
+            if (!channel) {
+                return;
             }
+            channel.startTyping();
+            const message_pieces = split_text_message(message);
+            setTimeout(function(){
+                _.forEach(message_pieces, message_piece => {
+                    if (embed) {
+                        channel.send(new DiscordJS.RichEmbed(embed).setDescription(message_piece));
+                    }
+                    else {
+                        channel.send(message_piece);
+                    }
+                });
+                channel.stopTyping();
+            }, 500);
         } catch (e) {
-            this.log('Failed to send message: ' + message, this.logLevel.ERROR);
+            this.log('Failed to send message: ' + message.slice(1970), this.logLevel.ERROR);
+            channel.stopTyping();
         }
     },
 
@@ -1166,23 +1487,19 @@ const util = {
         const d = ~~time % 365;
         time /= 365;
         const y = ~~time;
-        let str = "";
         if (y) {
-            str = `${y}y`;
+            return `${y}y ${d}d`;
         }
         if (d) {
-            str += ` ${d}d`;
+            return `${d}d ${h}h`;
         }
         if (h) {
-            str += ` ${h}h`;
+            return `${h}h ${m}m`;
         }
         if (m) {
-            str += ` ${m}m`;
+            return `${m}m ${s}s`;
         }
-        if (s) {
-            str += ` ${s}s`;
-        }
-        return str.trim();
+        return `${s}s`;
     },
 };
 
