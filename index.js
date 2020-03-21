@@ -1156,7 +1156,6 @@ const util = {
         const d = ~~time % 365;
         time /= 365;
         const y = ~~time;
-        let str = "";
         if (y) {
             return `${y}y ${d}d`;
         }
