@@ -713,7 +713,7 @@ const audits_to_string = (audits, snowflake) => {
         if (!audit.target || audit.target.id !== snowflake) { //not an entry where something was done to the user
             return current;
         }
-        current += `${util.time(new Date() - audit.createdAt)} ago: `;
+        current += `**${util.time(new Date() - audit.createdAt)} ago:** `;
         if (audit.action === "MEMBER_ROLE_UPDATE") {
             const action = audit.changes[0].key === "$add" ? "added" : "removed";
             current += `${audit.executor} ${action} role ${server.roles.has(audit.changes[0].new[0].id) ? `<@&${audit.changes[0].new[0].id}>` : audit.changes[0].new[0].name}`;
