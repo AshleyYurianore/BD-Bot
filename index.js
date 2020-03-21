@@ -1229,18 +1229,40 @@ const fnct = {
     }
 };
 
+const split_text_message = message => {
+    let message_pieces;
+    try {
+        //try splitting after newlines
+        message_pieces = DiscordJS.util.splitMessage(message);
+    } catch (error) {
+        //fall back to splitting after spaces
+        message_pieces = DiscordJS.util.splitMessage(message, {char: ' '});
+    }
+    return Array.isArray(message_pieces) ? message_pieces : [message_pieces]; //always return an array
+}
+
 const util = {
-    'sendTextMessage': function (channel, message) {
+    'sendTextMessage': function (channel, message, embed) {
         try {
-            if (channel) {
-                channel.startTyping();
-                setTimeout(function(){
-                    channel.send(message);
-                    channel.stopTyping(true);
-                }, 1500);
+            if (!channel) {
+                return;
             }
+            channel.startTyping();
+            const message_pieces = split_text_message(message);
+            setTimeout(function(){
+                _.forEach(message_pieces, message_piece => {
+                    if (embed) {
+                        channel.send(new DiscordJS.RichEmbed(embed).setDescription(message_piece));
+                    }
+                    else {
+                        channel.send(message_piece);
+                    }
+                });
+                channel.stopTyping();
+            }, 500);
         } catch (e) {
-            this.log('Failed to send message: ' + message, this.logLevel.ERROR);
+            this.log('Failed to send message: ' + message.slice(1970), this.logLevel.ERROR);
+            channel.stopTyping();
         }
     },
 
