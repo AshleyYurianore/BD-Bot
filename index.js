@@ -687,7 +687,7 @@ const get_permission_diff_string = (old_permissions, new_permissions) => {
         result += "Removed Permission(s): *" + removed.slice(0, -2) + "* ";
     }
     return result;
-}
+};
 
 const audit_changes_to_string = changes => {
     return `${_.reduce(changes, (curr, change) => {
@@ -705,7 +705,7 @@ const audit_changes_to_string = changes => {
         }
         return curr + " ";
     }, "")}`;
-}
+};
 
 const audits_to_string = (audits, snowflake) => {
     return audits.entries.reduce((current, audit) => {
@@ -798,7 +798,7 @@ const audit_send_result = (target_string, string, channel) => {
     _.forEach(message_pieces, message_piece => {
         channel.send(new DiscordJS.RichEmbed().setDescription(message_piece));
     });
-}
+};
 
 const audit_log_search = (target_string, message, snowflake, result_string, latest_entry, counter) => {
     if (!latest_entry) {
@@ -822,7 +822,7 @@ const audit_log_search = (target_string, message, snowflake, result_string, late
         .setAuthor(`Failed fetching more audits because ${error}`));
         message.channel.stopTyping();
     });
-}
+};
 
 const cmd = {
     'ping': async function (message) {
