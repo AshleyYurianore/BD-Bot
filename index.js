@@ -31,6 +31,7 @@ let channels = {
     'lfp-contact': "💬lfp-contact",
     'lfp-male': "🍆lfp-male",
     'lfp-female': "🍑lfp-female",
+    'lfp-femboy': "🍌lfp-femboy",
     'lfp-vanilla': "🍦lfp-vanilla",
     'lfp-gay': "👬lfp-gay",
     'lfp-lesbian': "👭lfp-lesbian",
@@ -174,6 +175,7 @@ const startUpMod = {
             lfpChannels.push(channels["lfp-bestiality"]);
             lfpChannels.push(channels["lfp-extreme"]);
             lfpChannels.push(channels["lfp-female"]);
+            lfpChannels.push(channels["lfp-femboy"]);
             lfpChannels.push(channels["lfp-furry"]);
             lfpChannels.push(channels["lfp-futa"]);
             lfpChannels.push(channels["lfp-gay"]);
@@ -511,12 +513,17 @@ client.on("message", (message) => {
                 case "male":
                     title = "MALES";
                     color = server.roles.find(role => _.isEqual(role.name, "Male")).color;
-                    target = "Males, Femboys, etc.";
+                    target = "Males, people with the \"Male\" role (not Femboys)";
                     break;
                 case "female":
                     title = "FEMALES";
                     color = server.roles.find(role => _.isEqual(role.name, "Female")).color;
                     target = "Females, Tomboys, etc.";
+                    break;
+                case "femboy":
+                    title = "FEMBOYS";
+                    color = server.roles.find(role => _.isEqual(role.name, "Trap")).color;
+                    target = "People with the \"Trap/Femboy\" role";
                     break;
                 case "vanilla":
                     title = "VANILLA RP";
