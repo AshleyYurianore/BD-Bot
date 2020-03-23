@@ -305,7 +305,7 @@ client.on("message", (message) => {
         if ((util.image_link_count(message.content) + number_of_attached_images) > 3) { // check for msg which have >3 images in any LFP channel
             violationMode = 1;
         }
-        //warn users who post too fast
+        // Check for messages sent in lfp channels
         message.channel.fetchMessages({ "before": message.id, "limit": 100 })
             .then(messages => {
                 let time_passed_s = 0;
@@ -316,10 +316,13 @@ client.on("message", (message) => {
                         return m1.createdTimestamp > m2.createdTimestamp ? m1 : m2;
                     }, { "author": message.author, "createdTimestamp": 0 });
 
+                    // Previous message sent was less than 24h ago
                     if (previous_message.createdTimestamp !== 0) {
                         time_passed_s = ~~((message.createdTimestamp - previous_message.createdTimestamp) / 1000);
-                        if (time_passed_s < 60 * 60 * 4) {
-                            violationMode += 2;
+                        if (time_passed_s < 60 * 60 * 24) {
+                            previous_message.delete()
+                                .then(() => util.log(`Deleted previous LFP message from ${message.author} (${message.author.id}) in ${message.channel} from ${util.time(time_passed_s)}.`, 'lfpMsgDelete', util.logLevel.INFO))
+                                .catch(() => util.log(`Couldn't delete previous LFP message from ${message.author} (${message.author.id}) in ${message.channel} from ${util.time(time_passed_s)}.`, 'lfpMsgDelete', util.logLevel.WARN));
                         }
                     }
                 }
@@ -330,8 +333,6 @@ client.on("message", (message) => {
                 let warnMsg = `${message.author}, your Looking For Partner ad in ${message.channel} `;
                 let reason = "";
                 if (violationMode === 1) { reason = `contains more than 3 images.`; }
-                if (violationMode === 2) { reason = `was sent too fast (after ${~~(time_passed_s / 3600)} hours and ${~~((time_passed_s % 3600) / 60)} minutes).`; }
-                if (violationMode === 3) { reason = `contains more than 3 images AND was sent too fast (after ${~~(time_passed_s / 3600)} hours and ${~~((time_passed_s % 3600) / 60)} minutes).`; }
 
                 message.react('❌')
                     .then() // react success
