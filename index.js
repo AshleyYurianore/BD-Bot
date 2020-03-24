@@ -372,7 +372,7 @@ client.on("message", (message) => {
     }
 
     // delete links in Hentai Corner and Pornhub categories
-    if (!util.isStaff(message) && !_.contains(["SOURCE", "NSFW-DISCUSSION", "EXTREME-FETISHES", "NSFW-BOT-IMAGES"], message.channel.name.toUpperCase()) && _.contains(["HENTAI CORNER", "PORNHUB"], message.channel.parent.name.toUpperCase())) {
+    if (!util.isUserStaff(message.author) && !_.contains(["SOURCE", "NSFW-DISCUSSION", "EXTREME-FETISHES", "NSFW-BOT-IMAGES"], message.channel.name.toUpperCase()) && _.contains(["HENTAI CORNER", "PORNHUB"], message.channel.parent.name.toUpperCase())) {
         if (!message.content.match(link_regex) && message.attachments.size < 1) {
             const logBody = `Non-Media/-Link in ${message.channel} from ${message.author}\nMessage content: ${message}`;
             message.delete()
