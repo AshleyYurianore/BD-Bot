@@ -27,6 +27,7 @@ let channels = {
     'charArchive': "📚character-archive",
     'charIndex': "📕character-index",
     'reports': "📮reports-and-issues",
+    'rp-feedback': "📒rp-feedback-entries",
     'lfp-info': "📌lfp-info",
     'lfp-contact': "💬lfp-contact",
     'lfp-male': "🍆lfp-male",
@@ -60,6 +61,7 @@ let emojis = {
     "pingangry": "pingangry",
 };
 let lfpTimer = [];
+let rpFeedbackTimer = [];
 let lfpChannels = [];
 let AsheN;
 let lockdown = false;
@@ -490,6 +492,51 @@ client.on("message", (message) => {
                     .catch(util.log(`${userM} failed to kick.`, 'Mute check', util.logLevel.WARN));
             }
         }
+    }
+
+    if (_.isEqual(message.channel, channels["rp-feedback"])) {
+        if (!_.isUndefined(rpFeedbackTimer)) {
+            clearTimeout(rpFeedbackTimer);
+        }
+        rpFeedbackTimer = setTimeout(() => {
+            message.channel.fetchMessages()
+                .then(messages => {
+                    let msg = messages.filter(m => _.isEqual(m.author.id, client.user.id));
+                    if (msg.size !== 1) {
+                        util.log(`Deleting ${msg.size} of my messages in ${message.channel} which shouldn't happen.`, "rpFeedbackInfo", util.logLevel.WARN);
+                    }
+                    msg.forEach(m => m.delete());
+                });
+
+            var infoMsg =
+                "**__Roleplaying Feedbacks__**\n"
+              + "\nThis channel is for giving a __constructive__ feedback for a certain member you roleplayed with!"
+              + "\nThe RP feedback should serve to help people see what they're doing well, what they're doing not "
+              + "very well so they can improve on their execution of RPs (if they want to). This should **not** be about"
+              + "making sure one-liners or people with rather unorthodox kinks are criticised to oblivion, but rather"
+              + " to make sure people get a feedback, as well as to let others know what to expect from these RPers."
+              + "\nBelow is a template you can use with certain criteria, which you can give feedback on. You can always"
+              + "add more points if you feel the need to, though keep in mind the discord message limit at 2000 characters."
+              + "\n\n__Tip about giving feedbacks:__ Try to construct your feedback like a sandwich and make it more 'digestible'"
+              + " (positive-negative-positive) for the person you're providing feedback for. :)"
+              + "\n\n__Feedback Template:__"
+            ;
+
+            var rpFeedbackTemplate =
+                "`"
+              + "**User to be given a review:** <@UserID>\n"
+              + "\n\n**🔹Grammar/Spelling:**"
+              + "\n\n**🔹Creativity:**"
+              + "\n\n**🔹Leader/Follower of the Story:**"
+              + "\n\n**🔹Time to reply:**"
+              + "\n\n**🔹Matching the length of replies as the partner/as set up:**"
+              + "\n\n**🔹Likelihood to roleplay with again:**"
+              + "\n\n**Additional Notes:**"
+              + "`"
+            ;
+            message.channel.send(infoMsg);
+            message.channel.send(rpFeedbackTemplate);
+        }, 2000);
     }
 
     // Post the LFP rules in LFP channels
