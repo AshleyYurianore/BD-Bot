@@ -371,6 +371,27 @@ client.on("message", (message) => {
         }
     }
 
+    // delete links in Hentai Corner and Pornhub categories
+    if (!util.isStaff(message) && !_.contains(["SOURCE", "NSFW-DISCUSSION", "EXTREME-FETISHES", "NSFW-BOT-IMAGES"], message.channel.name.toUpperCase()) && _.contains(["HENTAI CORNER", "PORNHUB"], message.channel.parent.name.toUpperCase())) {
+        if (!message.content.match(link_regex) && message.attachments.size < 1) {
+            const logBody = `Non-Media/-Link in ${message.channel} from ${message.author}\nMessage content: ${message}`;
+            message.delete()
+                .then(() => {
+                    util.log(`Removed ${logBody}`, 'Media Channel Text Filtering', util.logLevel.WARN);
+                })
+                .catch((e) => {
+                    util.log(`Failed to remove ${logBody}\nError: ${e.toString()}`, 'Media Channel Text Filtering', util.logLevel.ERROR);
+                });
+            message.reply(`Sorry, messages without media or links are removed in these media channels. Please put it in #nsfw-discussion instead.`)
+                .then(msg => {
+                    setTimeout(()=> {
+                        msg.delete();
+                    }, 7000);
+                });
+            return;
+        }
+    }
+
     // be paranoid about newcomers who invite people
     if (_.isEqual(message.channel.id, channels.tinkering.id)) {
         const invite_regex = /<@\d+> \*\*joined\*\*; Invited by \*\*.*\*\* \(\*\*\d+\*\* invites\)/g;
