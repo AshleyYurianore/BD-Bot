@@ -510,13 +510,13 @@ client.on("message", (message) => {
 
             var infoMsg =
                 "**__Roleplaying Feedbacks__**\n"
-              + "\nThis channel is for giving a __constructive__ feedback for a certain member you roleplayed with!"
-              + "\nThe RP feedback should serve to help people see what they're doing well, what they're doing not "
-              + "very well so they can improve on their execution of RPs (if they want to). This should **not** be about"
-              + "making sure one-liners or people with rather unorthodox kinks are criticised to oblivion, but rather"
-              + " to make sure people get a feedback, as well as to let others know what to expect from these RPers."
-              + "\nBelow is a template you can use with certain criteria, which you can give feedback on. You can always"
-              + "add more points if you feel the need to, though keep in mind the discord message limit at 2000 characters."
+              + "\nThis channel is for giving __constructive__ feedback on a member you roleplayed with!"
+              + "\nThe RP feedback should serve to help the member to see what they're doing well and what they're doing not "
+              + "well so they can improve on their execution of RPs (if they want to). This should **not** be about"
+              + "criticizing one-liners or people with unorthodox kinks into oblivion, but rather"
+              + " to make sure people get feedback, as well as to let others know what to expect from these RPers."
+              + "\nBelow is a template you can use with criteria you can give feedback on. You can always"
+              + "add more points if you feel the need to, though keep the discord message limit of 2000 characters in mind."
               + "\n\n__Tip about giving feedbacks:__ Try to construct your feedback like a sandwich and make it more 'digestible'"
               + " (positive-negative-positive) for the person you're providing feedback for. :)"
               + "\n\n__Feedback Template:__"
@@ -534,8 +534,14 @@ client.on("message", (message) => {
               + "\n\n**Additional Notes:**"
               + "`"
             ;
-            message.channel.send(infoMsg);
-            message.channel.send(rpFeedbackTemplate);
+
+            message.channel.send({
+                files: ['https://cdn.discordapp.com/attachments/549695897156583426/692109901308100638/rpfeedback.png']
+            })
+                .then(() => {
+                    message.channel.send(infoMsg);
+                    message.channel.send(rpFeedbackTemplate);
+                });
         }, 2000);
     }
 
