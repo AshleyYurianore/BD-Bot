@@ -1371,8 +1371,8 @@ const fnct = {
         }
     },
     'addFeedback': function(message, reaction, user) {
-        util.log(`${user} has started RP Feedback`, 'addFeedback', util.logLevel.INFO);
         if (_.isEqual(message, rpFeedbackMessage)) {
+            util.log(`${user} has started RP Feedback`, 'addFeedback', util.logLevel.INFO);
             channels["rp-fb-index"].overwritePermissions(user, {
                 READ_MESSAGES: true
             }, 'Add Feedback entry')
@@ -1388,8 +1388,8 @@ const fnct = {
         }
     },
     'revokeFeedback': function(message, reaction, user) {
-        util.log(`${user} has revoked RP Feedback`, 'revokeFeedback', util.logLevel.INFO);
         if (_.isEqual(message, rpFeedbackMessage)) {
+            util.log(`${user} has revoked RP Feedback`, 'revokeFeedback', util.logLevel.INFO);
             channels["rp-fb-index"].overwritePermissions(user, {
                 READ_MESSAGES: false
             }, 'Remove Feedback entry')
@@ -1413,11 +1413,11 @@ const fnct = {
         }
     },
     'approveFeedback': function(message, reaction, user) {
-        util.log(`${user} has approved ${message.author}'s RP Feedback`, 'approveFeedback', util.logLevel.INFO);
         if (_.isEqual(message.channel, channels["rp-fb-index"]) && util.isUserStaff(user)) {
             if (message.author === client.user) {
                 return;
             }
+            util.log(`${user} has approved ${message.author}'s RP Feedback`, 'approveFeedback', util.logLevel.INFO);
             channels["rp-fb-index"].overwritePermissions(message.author, {
                 READ_MESSAGES: false
             }, 'Approve Feedback: Remove Feedback index read permissions')
