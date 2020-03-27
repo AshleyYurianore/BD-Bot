@@ -574,7 +574,7 @@ client.on("message", (message) => {
             ;
 
             message.channel.send({
-                files: ['https://cdn.discordapp.com/attachments/549695897156583426/692109901308100638/rpfeedback.png']
+                files: ['https://cdn.discordapp.com/attachments/549695897156583426/693040596276740096/rpfeedback.png']
             })
                 .then(() => {
                     message.channel.send(infoMsg);
