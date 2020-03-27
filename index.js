@@ -1138,18 +1138,6 @@ const cmd = {
             }
         }
     },
-    'call': async function (message) {
-        const args = message.content.slice(prefix.length).trim().split(/ +/g);
-        const command = args.shift().toLowerCase();
-        try {
-            if (_.isEqual(command, "call")) return;
-            if (_.isUndefined(this[command])) return;
-            await this[command](message, args);
-            util.log(message.author.username + ' is calling command: ' + command, command, util.logLevel.INFO);
-        } catch (e) {
-            util.log(`Failed to process (${command})`, command, util.logLevel.ERROR);
-        }
-    },
     'age': function (message) {
         const snowflakes = (message.content.match(/\d+/g) || [message.author.id]).filter(match => match.length > 15);
         snowflakes.forEach(async snowflake => {
@@ -1290,6 +1278,18 @@ const cmd = {
     },
     'sm': function (message) {
         cmd.slowmode(message);
+    },
+    'call': async function (message) {
+        const args = message.content.slice(prefix.length).trim().split(/ +/g);
+        const command = args.shift().toLowerCase();
+        try {
+            if (_.isEqual(command, "call")) return;
+            if (_.isUndefined(this[command])) return;
+            await this[command](message, args);
+            util.log(message.author.username + ' is calling command: ' + command, command, util.logLevel.INFO);
+        } catch (e) {
+            util.log(`Failed to process (${command})`, command, util.logLevel.ERROR);
+        }
     }
 };
 
