@@ -589,7 +589,7 @@ client.on("message", (message) => {
                 .then(() => {
                     message.channel.send(infoMsg);
                     message.channel.send(rpFeedbackTemplate);
-                    message.channel.send(`_React below to start the process for submitting a feedback!_`)
+                    message.channel.send(`_React below to start the process for submitting a feedback! (and remove the reaction to cancel)_`)
                         .then(msg => {
                             rpFeedbackMessage = msg;
                             rpFeedbackMessage.react('✉️');
