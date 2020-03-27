@@ -23,6 +23,7 @@ let channels = {
     'level': "📈level-up-log",
     'logs': "accalia-logs",
     'warnings': "🚨warnings",
+    'cult-info': "🗿cult-info",
     'char-sub': "📃character-submission",
     'char-archive': "📚character-archive",
     'char-index': "📕character-index",
@@ -1278,6 +1279,56 @@ const cmd = {
     },
     'sm': function (message) {
         cmd.slowmode(message);
+    },
+    'cultinfo': function (message) {
+        message.channel.startTyping();
+        channels["cult-info"].fetchMessages({ limit: 1 })
+            .then(messages => {
+                let cultMsg = messages.first();
+                if (cultMsg && cultMsg.mentions.roles) {
+                    const embed = new DiscordJS.RichEmbed()
+                        .setAuthor(`Cult Info`)
+                        .setTimestamp(new Date());
+                    let description = "";
+
+                    let cultsString = cultMsg.content.split("\n\n");
+                    let cults = [];
+                    cultsString.forEach(cult => {
+                        if (!cult.match("<@&[0-9]*>")) {
+                            return;
+                        }
+                        let roleId = cult.match("<@&[0-9]*>")[0].slice(3, -1);
+
+                        
+
+                        cults.push({
+                            iconId: cult.slice(0,2) === "<:" ? cult.match("<:[a-zA-Z_0-9]*:[0-9]*>")[0] : cult.slice(0,2),
+                            roleId: roleId,
+                            leaderId: cult.match("<@![0-9]*>")[0].slice(3, -1),
+                            memberCount: server.roles.get(roleId).members.map(m => m.user.tag).length
+                        });
+                    });
+
+                    cults = cults.sort((a,b) => b.memberCount - a.memberCount);
+                    cults.forEach(cult => {
+                        description +=
+                            `${cult.iconId} <@&${cult.roleId}>\n`
+                            + `Leader: <@!${cult.leaderId}>\n`
+                            + `**${cult.memberCount}** members\n\n`
+                        ;
+                    });
+
+                    embed.setDescription(description);
+
+                    message.channel.send(embed)
+                        .then(() => message.channel.stopTyping())
+                        .catch(err => util.log(err, 'cultInfo', util.logLevel.ERROR));
+                }
+            })
+            .catch(err => {
+                util.log(err, 'cultInfo', util.logLevel.ERROR);
+                message.channel.stopTyping();
+            });
     },
     'call': async function (message) {
         const args = message.content.slice(prefix.length).trim().split(/ +/g);
