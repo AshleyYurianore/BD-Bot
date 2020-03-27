@@ -23,11 +23,12 @@ let channels = {
     'level': "📈level-up-log",
     'logs': "accalia-logs",
     'warnings': "🚨warnings",
-    'charSub': "📃character-submission",
-    'charArchive': "📚character-archive",
-    'charIndex': "📕character-index",
+    'char-sub': "📃character-submission",
+    'char-archive': "📚character-archive",
+    'char-index': "📕character-index",
     'reports': "📮reports-and-issues",
-    'rp-feedback': "📒rp-feedback-entries",
+    'rp-fb-entry': "📒rp-feedback-entries",
+    'rp-fb-index': "📒rp-feedback-index",
     'lfp-info': "📌lfp-info",
     'lfp-contact': "💬lfp-contact",
     'lfp-male': "🍆lfp-male",
@@ -63,6 +64,19 @@ let emojis = {
 let lfpTimer = [];
 let rpFeedbackTimer = [];
 let lfpChannels = [];
+let rpFeedbackMessage;
+const rpFeedbackTemplate =
+    "`"
+    + "**User to be given a review:** <@UserID>\n"
+    + "\n\n**🔹Grammar/Spelling:**"
+    + "\n\n**🔹Creativity:**"
+    + "\n\n**🔹Leader/Follower of the Story:**"
+    + "\n\n**🔹Time to reply:**"
+    + "\n\n**🔹Matching the length of replies as the partner/as set up:**"
+    + "\n\n**🔹Likelihood to roleplay with again:**"
+    + "\n\n**Additional Notes:**"
+    + "`"
+;
 let AsheN;
 let lockdown = false;
 let disableMentions = true;
@@ -189,6 +203,11 @@ const startUpMod = {
             lfpChannels.push(channels["lfp-trans"]);
             lfpChannels.push(channels["lfp-vanilla"]);
 
+            channels["rp-fb-entry"].fetchMessages({ limit: 1 })
+                .then(msg => {
+                    rpFeedbackMessage = msg.first();
+                    rpFeedbackMessage.react('✉️');
+                });
 
             cmd.cn("auto");
             this.testschedule();
@@ -243,7 +262,18 @@ client.on("guildUpdate", (oldGuild, newGuild) => {
 });
 
 client.on('messageReactionAdd', (messagereaction, user) => {
-    fnct.approveChar(messagereaction.message, messagereaction.emoji, user);
+    if (user === client.user) return;
+
+    const reaction = messagereaction.emoji.name;
+    if (_.isEqual(reaction, "⭐") || _.isEqual(reaction, "✅")) {
+        fnct.approveChar(messagereaction.message, messagereaction.emoji, user);
+    }
+    if (_.isEqual(reaction, "✉️")) {
+        fnct.addFeedback(messagereaction.message, messagereaction.emoji, user);
+    }
+    if (_.isEqual(reaction, "⭐") || _.isEqual(reaction, "✅")) {
+        fnct.approveFeedback(messagereaction.message, messagereaction.emoji, user);
+    }
 });
 
 client.on('raw', packet => {
@@ -432,7 +462,7 @@ client.on("message", (message) => {
             const log_message = `${message.author} pinged people with <@&${dontPingRole.id}>:\n${no_ping_mentions_string}\nMessage Link: <${message.url}>`;
             if (!util.isUserStaff(message.author)) { // exclude staff
                 util.log(log_message, "Ping role violation", util.logLevel.INFO);
-                message.react(ping_violation_reaction_emoji)
+                message.react(!_.isNull(ping_violation_reaction_emoji) ? ping_violation_reaction_emoji : '🚫')
                     .catch(error => {
                         util.log(`Failed reacting to <${message.url}>`, "Ping role violation", util.logLevel.WARN);
                         util.sendTextMessage(channels.main, `HALP, I'm blocked by ${message.author}!\n` +
@@ -494,7 +524,7 @@ client.on("message", (message) => {
         }
     }
 
-    if (_.isEqual(message.channel, channels["rp-feedback"])) {
+    if (_.isEqual(message.channel, channels["rp-fb-entry"])) {
         if (!_.isUndefined(rpFeedbackTimer)) {
             clearTimeout(rpFeedbackTimer);
         }
@@ -502,37 +532,24 @@ client.on("message", (message) => {
             message.channel.fetchMessages()
                 .then(messages => {
                     let msg = messages.filter(m => _.isEqual(m.author.id, client.user.id));
-                    if (msg.size !== 1) {
+                    if (msg.size !== 4) {
                         util.log(`Deleting ${msg.size} of my messages in ${message.channel} which shouldn't happen.`, "rpFeedbackInfo", util.logLevel.WARN);
                     }
                     msg.forEach(m => m.delete());
                 });
 
-            var infoMsg =
+            let infoMsg =
                 "**__Roleplaying Feedbacks__**\n"
               + "\nThis channel is for giving __constructive__ feedback on a member you roleplayed with!"
               + "\nThe RP feedback should serve to help the member to see what they're doing well and what they're doing not "
-              + "well so they can improve on their execution of RPs (if they want to). This should **not** be about"
+              + "well so they can improve on their execution of RPs (if they want to). This should **not** be about "
               + "criticizing one-liners or people with unorthodox kinks into oblivion, but rather"
               + " to make sure people get feedback, as well as to let others know what to expect from these RPers."
-              + "\nBelow is a template you can use with criteria you can give feedback on. You can always"
+              + "\nBelow is a template you can use with criteria you can give feedback on. You can always "
               + "add more points if you feel the need to, though keep the discord message limit of 2000 characters in mind."
               + "\n\n__Tip about giving feedbacks:__ Try to construct your feedback like a sandwich and make it more 'digestible'"
               + " (positive-negative-positive) for the person you're providing feedback for. :)"
               + "\n\n__Feedback Template:__"
-            ;
-
-            var rpFeedbackTemplate =
-                "`"
-              + "**User to be given a review:** <@UserID>\n"
-              + "\n\n**🔹Grammar/Spelling:**"
-              + "\n\n**🔹Creativity:**"
-              + "\n\n**🔹Leader/Follower of the Story:**"
-              + "\n\n**🔹Time to reply:**"
-              + "\n\n**🔹Matching the length of replies as the partner/as set up:**"
-              + "\n\n**🔹Likelihood to roleplay with again:**"
-              + "\n\n**Additional Notes:**"
-              + "`"
             ;
 
             message.channel.send({
@@ -541,6 +558,11 @@ client.on("message", (message) => {
                 .then(() => {
                     message.channel.send(infoMsg);
                     message.channel.send(rpFeedbackTemplate);
+                    message.channel.send(`_React below to start the process for submitting a feedback!_`)
+                        .then(msg => {
+                            rpFeedbackMessage = msg;
+                            rpFeedbackMessage.react('✉️');
+                        });
                 });
         }, 2000);
     }
@@ -1066,6 +1088,26 @@ const cmd = {
             util.sendTextMessage(message.channel, "Shoo! You don't have permissions for that!");
         }
     },
+    'clear': function(message, args) {
+        if (util.isStaff(message)) {
+            if (!isNaN(args[0])) {
+                message.channel.fetchMessages({ limit: (parseInt(args[0]) + 1) })
+                    .then(messages => {
+                        let count = 0;
+                        messages.forEach(m => {
+                            m.delete();
+                            if (++count === messages.size-1) {
+                                setTimeout(() => {
+                                    message.channel.send(`\`Cleared ${count-1} message(s)!\``)
+                                        .then(d => setTimeout(() => d.delete(), 5000));
+                                    util.log(`${message.author} cleared ${count-1} meessages in ${message.channel}`, 'clear', util.logLevel.INFO);
+                                }, 1000);
+                            }
+                        });
+                    });
+            }
+        }
+    },
     'call': async function (message) {
         const args = message.content.slice(prefix.length).trim().split(/ +/g);
         const command = args.shift().toLowerCase();
@@ -1273,7 +1315,7 @@ const fnct = {
     },
     'approveChar': function(message, reaction, user) {
         try {
-            if (_.isEqual(message.channel.name, channels.charSub.name) && util.isUserStaff(user)) {
+            if (_.isEqual(message.channel.name, channels["char-sub"].name) && util.isUserStaff(user)) {
                 let msgType = _.isEqual(reaction.name, "⭐") ? 1 : _.isEqual(reaction.name, "✅") ? 2 : 0;
                 if (msgType === 0) {
                     return;
@@ -1283,19 +1325,59 @@ const fnct = {
                 _.each(msgAttachments, imgUrl => msgImagesString += imgUrl + "\n");
                 util.log(`${user} approved character message:\n ${message.content}\n ${msgImagesString}`, "approveCharacter", util.logLevel.INFO);
                 let msgContent = `User: ${message.author}\n${message.content}`;
-                channels.charArchive.send(msgType === 1 ? msgContent : message.content, { files: msgAttachments })
+                channels["char-archive"].send(msgType === 1 ? msgContent : message.content, { files: msgAttachments })
                     .then(msg => {
                         if (msgType === 1) {
-                            channels.charIndex.send(`\`${message.author} Your character has been approved/updated and can be found in the index under \"\"\``);
+                            channels["char-index"].send(`\`${message.author} Your character has been approved/updated and can be found in the index under \"\"\``);
                         }
                         let msgImages = msg.attachments.map(a => a.url);
                         let msgImagesString = "";
                         _.each(msgImages, imgUrl => msgImagesString += imgUrl + "\n");
-                        channels.charIndex.send(`\`r!addchar \"charName\"\n${message.content}\n${msgImagesString}\``);
+                        channels["char-index"].send(`\`r!addchar \"charName\"\n${message.content}\n${msgImagesString}\``);
                     });
             }
         } catch (e) {
             util.log(e, 'approveCharacter', util.logLevel.ERROR);
+        }
+    },
+    'addFeedback': function(message, reaction, user) {
+        if (_.isEqual(message, rpFeedbackMessage)) {
+            channels["rp-fb-index"].overwritePermissions(user, {
+                READ_MESSAGES: true
+            }, 'Add Feedback entry')
+                .then(() => {
+                    channels["rp-fb-index"].send(
+                        `${user}, please submit your RP Feedback in this channel! It's highly advised ` +
+                        `to use the template below, but whether you use all the fields or add more is ` +
+                        `completely up to you. If you have any questions, feel free to ask right away!`
+                    );
+                    channels["rp-fb-index"].send(rpFeedbackTemplate);
+                })
+                .catch(err => util.log(err, 'addFeedback', util.logLevel.ERROR));
+        }
+    },
+    'approveFeedback': function(message, reaction, user) {
+        if (_.isEqual(message.channel, channels["rp-fb-index"]) && util.isUserStaff(user)) {
+            if (message.author === client.user) {
+                return;
+            }
+            channels["rp-fb-index"].overwritePermissions(message.author, {
+                READ_MESSAGES: false
+            }, 'Approve Feedback: Remove Feedback index read permissions')
+                .then(() => {
+                    message.channel.fetchMessages()
+                        .then(messages => {
+                            let msg = messages.filter(m => _.isEqual(m.author.id, client.user.id) && m.createdTimestamp < message.createdTimestamp);
+                            msg.forEach(m => m.delete());
+                        });
+                    const feedback =
+                        (_.isEqual(reaction.name, "⭐") ? `\`` : `\`RP Feedback for: <@UserID>\n`) +
+                        `Writen by: ${message.author}\n\n` +
+                        message.content + `\``
+                    ;
+                    message.channel.send(feedback);
+                })
+                .catch(err => util.log(err, 'approveFeedback', util.logLevel.ERROR));
         }
     }
 };
