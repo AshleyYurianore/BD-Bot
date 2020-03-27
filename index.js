@@ -276,6 +276,15 @@ client.on('messageReactionAdd', (messagereaction, user) => {
     }
 });
 
+client.on('messageReactionRemove', (messagereaction, user) => {
+    if (user === client.user) return;
+
+    const reaction = messagereaction.emoji.name;
+    if (_.isEqual(reaction, "✉️")) {
+        fnct.revokeFeedback(messagereaction.message, messagereaction.emoji, user);
+    }
+});
+
 client.on('raw', packet => {
     // We don't want this to run on unrelated packets
     if (!['MESSAGE_REACTION_ADD', 'MESSAGE_REACTION_REMOVE'].includes(packet.t)) return;
@@ -1362,6 +1371,7 @@ const fnct = {
         }
     },
     'addFeedback': function(message, reaction, user) {
+        util.log(`${user} has started RP Feedback`, 'addFeedback', util.logLevel.INFO);
         if (_.isEqual(message, rpFeedbackMessage)) {
             channels["rp-fb-index"].overwritePermissions(user, {
                 READ_MESSAGES: true
@@ -1377,7 +1387,33 @@ const fnct = {
                 .catch(err => util.log(err, 'addFeedback', util.logLevel.ERROR));
         }
     },
+    'revokeFeedback': function(message, reaction, user) {
+        util.log(`${user} has revoked RP Feedback`, 'revokeFeedback', util.logLevel.INFO);
+        if (_.isEqual(message, rpFeedbackMessage)) {
+            channels["rp-fb-index"].overwritePermissions(user, {
+                READ_MESSAGES: false
+            }, 'Remove Feedback entry')
+                .then(() => {
+                    channels["rp-fb-index"].fetchMessages()
+                        .then(messages => {
+                            let msg = messages.filter(m => _.isEqual(m.author.id, client.user.id));
+                            let messagesToDelete = [];
+                            msg.forEach((m, key) => {
+                                if (m.isMemberMentioned(user)) {
+                                    messagesToDelete.push(m);
+                                } else if (messagesToDelete.length !== 2) {
+                                    messagesToDelete = [];
+                                    messagesToDelete.push(m);
+                                }
+                            });
+                            _.each(messagesToDelete, m => m.delete());
+                        });
+                })
+                .catch(err => util.log(err, 'revokeFeedback', util.logLevel.ERROR));
+        }
+    },
     'approveFeedback': function(message, reaction, user) {
+        util.log(`${user} has approved ${message.author}'s RP Feedback`, 'approveFeedback', util.logLevel.INFO);
         if (_.isEqual(message.channel, channels["rp-fb-index"]) && util.isUserStaff(user)) {
             if (message.author === client.user) {
                 return;
