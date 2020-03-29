@@ -438,7 +438,7 @@ client.on("message", (message) => {
     }
 
     // delete links in Hentai Corner and Pornhub categories
-    if (!util.isUserStaff(message.author) && !_.contains(["SOURCE", "NSFW-DISCUSSION", "EXTREME-FETISHES", "NSFW-BOT-IMAGES"], message.channel.name.toUpperCase()) && _.contains(["HENTAI CORNER", "PORNHUB"], message.channel.parent.name.toUpperCase())) {
+    if (!util.isUserStaff(message.author) && !_.contains(["SOURCE", "NSFW-DISCUSSION", "EXTREME-FETISHES", "NSFW-BOT-IMAGES"], message.channel.name.toUpperCase()) && !_.isNull(message.channel.parent) && _.contains(["HENTAI CORNER", "PORNHUB"], message.channel.parent.name.toUpperCase())) {
         if (!message.content.match(link_regex) && message.attachments.size < 1) {
             const logBody = `Non-Media/-Link in ${message.channel} from ${message.author}\nMessage content: ${message}`;
             message.delete()
@@ -1361,39 +1361,53 @@ const cmd = {
         cmd.checkwarn(message);
     },
     'roles': function (message, args) {
-        if (!util.isStaff(member)) { //the commands are really spammy
+        if (!util.isStaff(message)) { //the commands are really spammy
             return;
         }
         if (args.size === 0) { //TODO: Show help?
+            util.sendTempTextMessage(message.channel, 'That didn\'t work out... maybe try `_roles who <roleID>` or `_roles usage` or `_roles usage list`');
             return;
         }
         if (args[0] === "usage") {
-            return cmd["roles usage"](message);
+            args = args.slice(1);
+            return cmd["roles usage"](message, args);
         }
         if (args[0] === "who") {
             return cmd["roles who"](message);
         }
-        //unknown roles command
-        //TODO: Show help?
+        util.sendTempTextMessage(message.channel, 'That didn\'t work out... maybe try `_roles who <roleID>` or `_roles usage` or `_roles usage list`');
     },
-    'roles usage': function (message) { //list all the roles and their usage
+    'roles usage': function (message, args) { //list all the roles and their usage; args can only be "list"
+        let sortOrder = "";
+        if (args && _.isEqual(args[0], "list")) {
+            sortOrder = "list";
+        }
         let roles = new DiscordJS.Collection();
         server.roles.forEach(role => roles.set(role.id, 0));
         server.members.forEach(member => {
             member.roles.forEach(role => roles.set(role.id, roles.get(role.id) + 1));
         });
-        roles = roles.sort((count_left, count_right, role_left, role_right) => {
-            if (count_right - count_left) { //sort by use-count first
-                return count_right - count_left;
-            }
-            //sort by name second
-            return server.roles.get(role_left).name < server.roles.get(role_right).name ? -1 : 1;
-        });
+
+            roles = roles.sort((count_left, count_right, role_left, role_right) => {
+                if (sortOrder !== "list") {
+                    if (count_right - count_left) { //sort by use-count first
+                        return count_right - count_left;
+                    }
+                    //sort by name second
+                    return server.roles.get(role_left).name < server.roles.get(role_right).name ? -1 : 1;
+                } else if (sortOrder === "list") { //sort by name second
+                    return server.roles.get(role_right).calculatedPosition - server.roles.get(role_left).calculatedPosition;
+                }
+            });
         const roles_str = roles.reduce((current, count, role) => current + `${server.roles.get(role)}: ${count}\n`, "");
         util.sendTextMessage(message.channel, `${roles.size}/250 roles:\n${roles_str}`, true);
     },
     'roles who': function (message) { //list the members who have a certain role
         const ids = message.content.match(/\d+/g);
+        if (_.isNull(ids)) {
+            util.sendTempTextMessage(message.channel, 'Please specify the ID of the role you want to check on!');
+            return;
+        }
         ids.forEach(id => {
             const role = server.roles.get(id);
             if (!role) {
@@ -1604,7 +1618,31 @@ const util = {
             channel.stopTyping();
         }
     },
-
+    'sendTempTextMessage': function (channel, message, embed) {
+        try {
+            if (!channel) {
+                return;
+            }
+            channel.startTyping();
+            const message_pieces = split_text_message(message);
+            setTimeout(function(){
+                _.forEach(message_pieces, message_piece => {
+                    if (embed) {
+                        channel.send(new DiscordJS.RichEmbed(embed).setDescription(message_piece))
+                            .then(d => setTimeout(() => d.delete(), 5000));
+                    }
+                    else {
+                        channel.send(message_piece)
+                            .then(d => setTimeout(() => d.delete(), 5000));;
+                    }
+                });
+                channel.stopTyping();
+            }, 500);
+        } catch (e) {
+            this.log('Failed to send message: ' + message.slice(1970), this.logLevel.ERROR);
+            channel.stopTyping();
+        }
+    },
     'isStaff': function (message) {
         return message.author.lastMessage.member.roles.find(role => _.isEqual(role.name, this.roles.STAFF) || _.isEqual(role.name, this.roles.TRIALMOD)) || message.author === AsheN;
     },
