@@ -152,8 +152,28 @@ const dbMod = {
                         util.log(`Failed to do command warning (findOneAndUpdate): ${err}.`, 'DB/warnUser', util.logLevel.FATAL);
                     });
             });
-        } catch (e) {
-            util.log('Failed to do "warnUser".', 'DB/warnUser', util.logLevel.FATAL);
+        } catch (err) {
+            util.log('Failed to do "warnUser": ' + err, 'DB/warnUser', util.logLevel.FATAL);
+        }
+    },
+    'checkWarnings': function () {
+        util.log(`Calling DB Module`, 'DB/checkWarnings', util.logLevel.INFO);
+        try {
+            return;
+            util.log(`Attempting to connect to DB`, 'DB/checkWarnings', util.logLevel.INFO);
+            this.connect( function(db) {
+                let warnings = db.collection('warnings');
+                warnings.findAll()
+                    .then(() => {
+                        util.log(`Successfully added/updated warning for ${member} (lvl ${level})`, 'DB/warnUser', util.logLevel.INFO);
+
+                    })
+                    .catch((err) => {
+                        util.log(`Failed to do command warning (findOneAndUpdate): ${err}.`, 'DB/warnUser', util.logLevel.FATAL);
+                    });
+            });
+        } catch (err) {
+            util.log('Failed to do "checkWarnings":' + err, 'DB/checkWarnings', util.logLevel.FATAL);
         }
     },
     'connect': function (callback) {
@@ -211,15 +231,19 @@ const startUpMod = {
                 });
 
             cmd.cn("auto");
-            this.testschedule();
+            this.startSchedules();
 
         } catch (e) {
             if (!_.isUndefined(localConfig)) console.log(`(${moment().format('MMM DD YYYY - HH:mm:ss.SSS')}) Failed to start up.`);
         }
     },
-    'testschedule': function () {
+    'startSchedules': function () {
         // Cron-format: second 0-59 optional; minute 0-59; hour 0-23; day of month 1-31; month 1-12; day of week 0-7
         let j = schedule.scheduleJob('*/60 * * * *', function(fireDate){
+            cmd.cn("auto");
+        });
+        return;
+        let k = schedule.scheduleJob('*/60 * * * *', function(fireDate){
             cmd.cn("auto");
         });
     }
@@ -1329,6 +1353,12 @@ const cmd = {
                 util.log(err, 'cultInfo', util.logLevel.ERROR);
                 message.channel.stopTyping();
             });
+    },
+    'checkwarn': function (message) {
+
+    },
+    'cw': function (message) {
+        cmd.checkwarn(message);
     },
     'call': async function (message) {
         const args = message.content.slice(prefix.length).trim().split(/ +/g);
