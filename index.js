@@ -1360,6 +1360,54 @@ const cmd = {
     'cw': function (message) {
         cmd.checkwarn(message);
     },
+    'roles': function (message, args) {
+        if (!util.isStaff(member)) { //the commands are really spammy
+            return;
+        }
+        if (args.size === 0) { //TODO: Show help?
+            return;
+        }
+        if (args[0] === "usage") {
+            return cmd["roles usage"](message);
+        }
+        if (args[0] === "who") {
+            return cmd["roles who"](message);
+        }
+        //unknown roles command
+        //TODO: Show help?
+    },
+    'roles usage': function (message) { //list all the roles and their usage
+        let roles = new DiscordJS.Collection();
+        server.roles.forEach(role => roles.set(role.id, 0));
+        server.members.forEach(member => {
+            member.roles.forEach(role => roles.set(role.id, roles.get(role.id) + 1));
+        });
+        roles = roles.sort((count_left, count_right, role_left, role_right) => {
+            if (count_right - count_left) { //sort by use-count first
+                return count_right - count_left;
+            }
+            //sort by name second
+            return server.roles.get(role_left).name < server.roles.get(role_right).name ? -1 : 1;
+        });
+        const roles_str = roles.reduce((current, count, role) => current + `${server.roles.get(role)}: ${count}\n`, "");
+        util.sendTextMessage(message.channel, `${roles.size}/250 roles:\n${roles_str}`, true);
+    },
+    'roles who': function (message) { //list the members who have a certain role
+        const ids = message.content.match(/\d+/g);
+        ids.forEach(id => {
+            const role = server.roles.get(id);
+            if (!role) {
+                return;
+            }
+            const users_str = server.members.reduce((curr, member) => {
+                if (member.roles.has(role.id)) {
+                    curr += `${member} `;
+                }
+                return curr;
+            }, "");
+            util.sendTextMessage(message.channel, `Users with role ${role}:\n${users_str}`, true);
+        });
+    },
     'call': async function (message) {
         const args = message.content.slice(prefix.length).trim().split(/ +/g);
         const command = args.shift().toLowerCase();
