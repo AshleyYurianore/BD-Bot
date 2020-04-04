@@ -338,10 +338,10 @@ client.on('raw', packet => {
 client.on("channelUpdate", (oldChannel, newChannel) => {
     if (newChannel.guild.id !== server.id) return; // Ignore non-main servers
     if (oldChannel.parent.id !== newChannel.parent.id) {
-        util.log(`Channel ${newChannel} was moved! Category ${oldChannel.parent} -> ${newChannel.parent}`, "Channel Position", util.logLevel.WARN);
+        util.log(`:warning: Channel ${newChannel} was moved! Category ${oldChannel.parent} position ${oldChannel.position} -> ${newChannel.parent} position ${newChannel.position}`, "Channel Position", util.logLevel.WARN);
     }
-    else if (oldChannel.position !== newChannel.position) {
-        util.log(`Channel ${newChannel} was moved! Position ${oldChannel.position} -> ${newChannel.position}`, "Channel Position", util.logLevel.WARN);
+    else if (oldChannel.position !== newChannel.position && Math.abs(oldChannel.position - newChannel.position) != 1) {
+        util.log(`:warning: Channel ${newChannel} was moved! Position ${oldChannel.position} -> ${newChannel.position}`, "Channel Position", util.logLevel.WARN);
     }
 });
 
