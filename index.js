@@ -46,7 +46,7 @@ let channels = {
     'lfp-long': "📰lfp-long-term-plot",
     'lfp-vc': "🎤lfp-vc",
     'lfp-sfw': "🌺lfp-sfw",
-    'nsfw-general': "🔞nsfw-general",
+    'general': "🔞general",
     'nsfw-media': "👅nsfw-media",
     'tinkering': "tinkering",
     'authentication-logs': "🎫authentication-logs",
@@ -417,8 +417,8 @@ client.on("message", (message) => {
             });
     }
 
-    // delete links in nsfw-general
-    if (_.isEqual(message.channel.id, channels["nsfw-general"].id)) {
+    // delete links in general
+    if (_.isEqual(message.channel.id, channels["general"].id)) {
         if (message.content.match(link_regex)) {
             if (util.isStaff(message)) { //have mercy on staff and don't delete messages
                 message.react(emojis.bancat).catch(console.error);
