@@ -1506,7 +1506,9 @@ const fnct = {
                         let msgImages = msg.attachments.map(a => a.url);
                         let msgImagesString = "";
                         _.each(msgImages, imgUrl => msgImagesString += imgUrl + "\n");
-                        channels["char-index"].send(`\`r!addchar \"charName\"\n${message.content}\n${msgImagesString}\``);
+                        channels["char-index"].send(`\`r!addchar \"charName\"\n\``);
+                        channels["char-index"].send(`\`${message.content}\``);
+                        channels["char-index"].send(`${msgImagesString}`);
                     });
             }
         } catch (e) {
