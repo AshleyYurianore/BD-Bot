@@ -84,6 +84,7 @@ let disableMentions = true;
 let ping_violation_reaction_emoji = emojis.pingangry;
 const level_up_module = "Level roles";
 const link_regex = /((https?|ftp):\/\/|www\.)(\w.+\w\W?)/g; //source: https://support.discordapp.com/hc/en-us/community/posts/360036244152-Change-in-text-link-detection-RegEx
+let mediaTextonlyMessageCounter = 0;
 
 const dbMod = {
     'warnUser': function (member, level, warner, reason) {
@@ -437,8 +438,30 @@ client.on("message", (message) => {
         }
     }
 
+    // react to too many text messages in nsfw-media
+    if (_.isEqual(message.channel.id, channels["nsfw-media"].id)) {
+        if (_.isNull(message.content.match(link_regex)) && message.attachments.size === 0) {
+            if (util.isStaff(message)) { // staff
+                message.react(emojis.bancat).catch(console.error);
+                return;
+            } else if (mediaTextonlyMessageCounter % 10 === 0 && mediaTextonlyMessageCounter > 0) {
+                util.sendTempTextMessage(message.channel, `Please refrain from having a lengthy conversation in the __media__ channel! Thank you...`);
+                util.sendTextMessage(channels.main, `There's too much discussion in ${message.channel}...`)
+            } else if (mediaTextonlyMessageCounter > 9) {
+                message.react("💢").catch(console.error);
+            }
+            mediaTextonlyMessageCounter++;
+            return;
+        } else {
+            mediaTextonlyMessageCounter = 0;
+        }
+    }
+
     // delete links in Hentai Corner and Pornhub categories
-    if (!util.isUserStaff(message.author) && !_.contains(["SOURCE", "NSFW-DISCUSSION", "EXTREME-FETISHES", "NSFW-BOT-IMAGES"], message.channel.name.toUpperCase()) && !_.isNull(message.channel.parent) && _.contains(["HENTAI CORNER", "PORNHUB"], message.channel.parent.name.toUpperCase())) {
+    if (!util.isUserStaff(message.author) &&
+        !_.contains(["SOURCE", "NSFW-DISCUSSION", "EXTREME-FETISHES", "NSFW-BOT-IMAGES"], message.channel.name.toUpperCase()) &&
+        !_.isNull(message.channel.parent) && _.contains(["HENTAI CORNER", "PORNHUB"], message.channel.parent.name.toUpperCase())
+    ) {
         if (!message.content.match(link_regex) && message.attachments.size < 1) {
             const logBody = `Non-Media/-Link in ${message.channel} from ${message.author}\nMessage content: ${message}`;
             message.delete()
