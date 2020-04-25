@@ -1433,7 +1433,58 @@ const cmd = {
         } catch (e) {
             util.log(`Failed to process (${command})`, command, util.logLevel.ERROR);
         }
-    }
+    },
+    'help': function (message) {
+        util.sendTextMessage(message.channel, `I understand the following commands. *Italic* commands are staff-only.
+
+**\`_ping\`**
+Show practical reaction delay and Discord delay.
+
+**\`_staff\`**
+Checks if you are staff.
+
+***\`_warn\`*** \`[@user] [?reason]\`
+Applies appropriate warning role (Warned 1x or Warned 2x), sends a DM about the warning and enters it into database.
+
+***\`_stopmention\`***
+Makes me no longer listen to non-staff.
+
+***\`_startmention\`***
+Makes me listen to non-staff again.
+
+***\`_cn\`***
+Kick newcomers who do not have the NSFW role for over 10 minutes. The command is run automatically every full hour.
+
+***\`_clear\`*** \`[number]\`
+Deletes the laste [number] messages.
+
+**\`_age\`** \`[@user|#channel|emoji|ID]*\`
+Display the age of an ID. If the ID is of a member of the server also display when they joined and will be eligible for the ancient role. If you don't specify an ID it displays your own info.
+
+**\`_pfp\`** \`[@user|userID]*\`
+Display the profile picture of a user in big.
+
+***\`_audit\`*** \`[mention|ID]*\`
+Go through the last 10000 audit entries and display all entries (up to message limit) that contain moderator action of the given target. This command tends to take ~10-20 seconds, please be patient.
+
+***\`_slowmode\`*** | ***\`_sm\`*** \`[#channel|channelID] [number][h|m|s]*\`
+Sets slowmode to the channel. Example: \`_slowmode #🔞general 30s 2m\`. The time is optional and defaults to 0. The maximum time is 6 hours. Use this command if you need to set a slowmode that is not supported by the UI such as 4 hours.
+
+**\`_cultinfo\`**
+Displays a list of the current cults and their symbol, cult role, leader and number of members sorted by members.
+
+***\`_roles usage\`***
+Displays a list of all roles and the number of their uses sorted by use-count.
+
+***\`_roles usage list\`***
+Displays a list of all roles and the number of their uses sorted by name.
+
+***\`_roles who\`*** \`[@role|roleID]*\`
+Displays a list of members who have the specified role(s).
+
+**\`_help\`**
+Display this text.`, true)
+    },
 };
 
 const fnct = {
