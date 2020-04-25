@@ -253,8 +253,8 @@ const startUpMod = {
 client.on("ready", () => {
     startUpMod.initialize("I'M AWAKE! AWOOO~");
 
-    //Catch up on missed level-ups
-    if (_.isUndefined(channels.level)) {
+    // Catch up on missed level-ups
+    if (_.isUndefined(channels.level) || _.isNull(channels.level)) {
         return;
     }
     channels.level.fetchMessages({ "limit": 100 })
