@@ -46,7 +46,7 @@ let channels = {
     'lfp-long': "📰lfp-long-term-plot",
     'lfp-vc': "🎤lfp-vc",
     'lfp-sfw': "🌺lfp-sfw",
-    'nsfw-general': "🔞nsfw-general",
+    'general': "🔞general",
     'nsfw-media': "👅nsfw-media",
     'tinkering': "tinkering",
     'authentication-logs': "🎫authentication-logs",
@@ -84,6 +84,7 @@ let disableMentions = true;
 let ping_violation_reaction_emoji = emojis.pingangry;
 const level_up_module = "Level roles";
 const link_regex = /((https?|ftp):\/\/|www\.)(\w.+\w\W?)/g; //source: https://support.discordapp.com/hc/en-us/community/posts/360036244152-Change-in-text-link-detection-RegEx
+let mediaTextonlyMessageCounter = 0;
 
 const dbMod = {
     'warnUser': function (member, level, warner, reason) {
@@ -252,8 +253,8 @@ const startUpMod = {
 client.on("ready", () => {
     startUpMod.initialize("I'M AWAKE! AWOOO~");
 
-    //Catch up on missed level-ups
-    if (_.isUndefined(channels.level)) {
+    // Catch up on missed level-ups
+    if (_.isUndefined(channels.level) || _.isNull(channels.level)) {
         return;
     }
     channels.level.fetchMessages({ "limit": 100 })
@@ -337,11 +338,11 @@ client.on('raw', packet => {
 
 client.on("channelUpdate", (oldChannel, newChannel) => {
     if (newChannel.guild.id !== server.id) return; // Ignore non-main servers
-    if (oldChannel.parent.id !== newChannel.parent.id) {
-        util.log(`Channel ${newChannel} was moved! Category ${oldChannel.parent} -> ${newChannel.parent}`, "Channel Position", util.logLevel.WARN);
+    if (oldChannel.parent && newChannel.parent && oldChannel.parent.id !== newChannel.parent.id) {
+        util.log(`:warning: Channel ${newChannel} was moved! Category ${oldChannel.parent} position ${oldChannel.position} -> ${newChannel.parent} position ${newChannel.position}`, "Channel Position", util.logLevel.WARN);
     }
-    else if (oldChannel.position !== newChannel.position) {
-        util.log(`Channel ${newChannel} was moved! Position ${oldChannel.position} -> ${newChannel.position}`, "Channel Position", util.logLevel.WARN);
+    else if (oldChannel.position !== newChannel.position && Math.abs(oldChannel.position - newChannel.position) != 1) {
+        util.log(`:warning: Channel ${newChannel} was moved! Position ${oldChannel.position} -> ${newChannel.position}`, "Channel Position", util.logLevel.WARN);
     }
 });
 
@@ -417,8 +418,8 @@ client.on("message", (message) => {
             });
     }
 
-    // delete links in nsfw-general
-    if (_.isEqual(message.channel.id, channels["nsfw-general"].id)) {
+    // delete links in general
+    if (_.isEqual(message.channel.id, channels["general"].id)) {
         if (message.content.match(link_regex)) {
             if (util.isStaff(message)) { //have mercy on staff and don't delete messages
                 message.react(emojis.bancat).catch(console.error);
@@ -437,8 +438,30 @@ client.on("message", (message) => {
         }
     }
 
+    // react to too many text messages in nsfw-media
+    if (_.isEqual(message.channel.id, channels["nsfw-media"].id)) {
+        if (_.isNull(message.content.match(link_regex)) && message.attachments.size === 0) {
+            if (util.isStaff(message)) { // staff
+                message.react(emojis.bancat).catch(console.error);
+                return;
+            } else if (mediaTextonlyMessageCounter % 10 === 0 && mediaTextonlyMessageCounter > 0) {
+                util.sendTempTextMessage(message.channel, `Please refrain from having a lengthy conversation in the __media__ channel! Thank you...`);
+                util.sendTextMessage(channels.main, `There's too much discussion in ${message.channel}...`)
+            } else if (mediaTextonlyMessageCounter > 9) {
+                message.react("💢").catch(console.error);
+            }
+            mediaTextonlyMessageCounter++;
+            return;
+        } else {
+            mediaTextonlyMessageCounter = 0;
+        }
+    }
+
     // delete links in Hentai Corner and Pornhub categories
-    if (!util.isUserStaff(message.author) && !_.contains(["SOURCE", "NSFW-DISCUSSION", "EXTREME-FETISHES", "NSFW-BOT-IMAGES"], message.channel.name.toUpperCase()) && !_.isNull(message.channel.parent) && _.contains(["HENTAI CORNER", "PORNHUB"], message.channel.parent.name.toUpperCase())) {
+    if (!util.isUserStaff(message.author) &&
+        !_.contains(["SOURCE", "NSFW-DISCUSSION", "EXTREME-FETISHES-BOT", "NSFW-BOT-IMAGES"], message.channel.name.toUpperCase()) &&
+        !_.isNull(message.channel.parent) && _.contains(["HENTAI CORNER", "PORNHUB"], message.channel.parent.name.toUpperCase())
+    ) {
         if (!message.content.match(link_regex) && message.attachments.size < 1) {
             const logBody = `Non-Media/-Link in ${message.channel} from ${message.author}\nMessage content: ${message}`;
             message.delete()
@@ -1557,7 +1580,9 @@ const fnct = {
                         let msgImages = msg.attachments.map(a => a.url);
                         let msgImagesString = "";
                         _.each(msgImages, imgUrl => msgImagesString += imgUrl + "\n");
-                        channels["char-index"].send(`\`r!addchar \"charName\"\n${message.content}\n${msgImagesString}\``);
+                        channels["char-index"].send(`\`r!addchar \"charName\"\n\``);
+                        channels["char-index"].send(`\`${message.content}\``);
+                        channels["char-index"].send(`${msgImagesString}`);
                     });
             }
         } catch (e) {
