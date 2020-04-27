@@ -443,16 +443,18 @@ client.on("message", (message) => {
         if (_.isNull(message.content.match(link_regex)) && message.attachments.size === 0) {
             if (util.isStaff(message)) { // staff
                 return;
-            } else if (mediaTextonlyMessageCounter % 10 === 0 && mediaTextonlyMessageCounter > 0) {
+            } else if (mediaTextonlyMessageCounter % 5 === 0 && mediaTextonlyMessageCounter !== 0) {
                 util.sendTempTextMessage(message.channel, `Please refrain from having a lengthy conversation in the __media__ channel! Thank you...`);
-                util.sendTextMessage(channels.main, `There's too much discussion in ${message.channel}...`)
-            } else if (mediaTextonlyMessageCounter > 9) {
-                message.react("💢").catch(console.error);
+                util.sendTextMessage(channels.main, `There's too much discussion in ${message.channel}...`);
+                mediaTextonlyMessageCounter += 50;
+            } else if (mediaTextonlyMessageCounter > 4) {
+                message.delete().catch(console.error);
+                //message.react("💢").catch(console.error);
             }
             mediaTextonlyMessageCounter++;
             return;
         } else {
-            mediaTextonlyMessageCounter = 0;
+            mediaTextonlyMessageCounter--;
         }
     }
 
