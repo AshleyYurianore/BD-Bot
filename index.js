@@ -442,7 +442,6 @@ client.on("message", (message) => {
     if (_.isEqual(message.channel.id, channels["nsfw-media"].id)) {
         if (_.isNull(message.content.match(link_regex)) && message.attachments.size === 0) {
             if (util.isStaff(message)) { // staff
-                message.react(emojis.bancat).catch(console.error);
                 return;
             } else if (mediaTextonlyMessageCounter % 10 === 0 && mediaTextonlyMessageCounter > 0) {
                 util.sendTempTextMessage(message.channel, `Please refrain from having a lengthy conversation in the __media__ channel! Thank you...`);
