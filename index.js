@@ -1881,7 +1881,7 @@ const util = {
         //Note: Need to be careful to add first and then remove, otherwise Yag adds the lvl0 role
         const role_remover = () => {
             if (role_lose_string) {
-                member.removeRoles(old_roles, reason)
+                member.removeRoles(outdated_roles, reason)
                 .then(() => {
                     message.react('✅').catch(console.error);
                     util.log(`Successfully removed ${role_lose_string} from ${user}\nMessage Link: <${message.url}>.`, level_up_module, util.logLevel.INFO);
