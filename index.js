@@ -443,10 +443,10 @@ client.on("message", (message) => {
         if (_.isNull(message.content.match(link_regex)) && message.attachments.size === 0) {
             if (util.isStaff(message)) { // staff
                 return;
-            } else if (mediaTextonlyMessageCounter % 8 === 0 && mediaTextonlyMessageCounter !== 0) {
-                util.sendTempTextMessage(message.channel, `Please refrain from having a lengthy conversation in the __media__ channel! Thank you...`);
+            } else if (mediaTextonlyMessageCounter % 7 === 0 && mediaTextonlyMessageCounter !== 0) {
+                util.sendTempTextMessage(message.channel, `**Please refrain from having a lengthy conversation in the __media__ channel!** Thank you...`);
                 util.sendTextMessage(channels.main, `There's too much discussion in ${message.channel}...`);
-                mediaTextonlyMessageCounter += 15;
+                mediaTextonlyMessageCounter = 15;
             } else if (mediaTextonlyMessageCounter > 7) {
                 message.delete().catch(console.error);
                 //message.react("💢").catch(console.error);
