@@ -1352,7 +1352,7 @@ const cmd = {
                         cults.push({
                             iconId: cult.slice(0,2) === "<:" ? cult.match("<:[a-zA-Z_0-9]*:[0-9]*>")[0] : cult.slice(0,2),
                             roleId: roleId,
-                            leaderId: cult.match("<@![0-9]*>")[0].slice(3, -1),
+                            leaderId: cult.match("<@[0-9]*>")[0].slice(2, -1),
                             memberCount: server.roles.get(roleId).members.map(m => m.user.tag).length
                         });
                     });
@@ -1361,7 +1361,7 @@ const cmd = {
                     cults.forEach(cult => {
                         description +=
                             `${cult.iconId} <@&${cult.roleId}>\n`
-                            + `Leader: <@!${cult.leaderId}>\n`
+                            + `Leader: <@${cult.leaderId}>\n`
                             + `**${cult.memberCount}** members\n\n`
                         ;
                     });
