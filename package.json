@@ -18,9 +18,7 @@
     "mongodb": "^3.5.3",
     "node-schedule": "^1.3.2",
     "underscore": "^1.10.2",
-    "utf-8-validate": "^5.0.2"
-  },
-  "devDependencies": {
+    "utf-8-validate": "^5.0.2",
     "typescript": "^3.8.3"
   }
 }
