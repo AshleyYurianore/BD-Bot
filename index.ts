@@ -1246,11 +1246,11 @@ const cmd: Cmd = {
             return;
         }
         _.each(newcomerMembers, (member, index) => {
-            util.log(`Clearing newcomer role from: <@${member.id}> (${index+1} / ${newcomerMembers.length} )`, "clearNewcomer", util.logLevel.INFO);
             try {
                 if ((new Date().getTime() - (server.member(member)?.joinedAt?.getTime() || 0))/1000/60 <= 10) { // joined less than 10 minutes ago
                     return;
                 }
+                util.log(`Clearing newcomer role from: <@${member.id}> (${index+1} / ${newcomerMembers.length})`, "clearNewcomer", util.logLevel.INFO);
                 server.member(member)?.roles.remove(newcomerRole)
                     .then((guildMember) => {
                         if (_.isNull(guildMember.roles.cache.find(role => role.name === "NSFW")) && ((new Date().getTime() - (guildMember.joinedAt?.getTime() || 0))/1000/60 > 10)) { // joined more than 10 minutes ago

@@ -1196,11 +1196,11 @@ const cmd = {
         }
         _.each(newcomerMembers, (member, index) => {
             var _a, _b, _c;
-            util.log(`Clearing newcomer role from: <@${member.id}> (${index + 1} / ${newcomerMembers.length} )`, "clearNewcomer", util.logLevel.INFO);
             try {
                 if ((new Date().getTime() - (((_b = (_a = server.member(member)) === null || _a === void 0 ? void 0 : _a.joinedAt) === null || _b === void 0 ? void 0 : _b.getTime()) || 0)) / 1000 / 60 <= 10) { // joined less than 10 minutes ago
                     return;
                 }
+                util.log(`Clearing newcomer role from: <@${member.id}> (${index + 1} / ${newcomerMembers.length})`, "clearNewcomer", util.logLevel.INFO);
                 (_c = server.member(member)) === null || _c === void 0 ? void 0 : _c.roles.remove(newcomerRole).then((guildMember) => {
                     var _a;
                     if (_.isNull(guildMember.roles.cache.find(role => role.name === "NSFW")) && ((new Date().getTime() - (((_a = guildMember.joinedAt) === null || _a === void 0 ? void 0 : _a.getTime()) || 0)) / 1000 / 60 > 10)) { // joined more than 10 minutes ago
