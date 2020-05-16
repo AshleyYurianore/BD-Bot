@@ -793,7 +793,7 @@ client.on("message", (message) => {
                 `If you want to **contact** someone who posted in this channel, **please check their DM Roles** first before doing so and please use ${channels["lfp-contact"]}!\n\n` +
                 `*More info in:* ${channels["lfp-info"]}\n\n`;
             channel.send(lfpMsg)
-                .then(() => util.log('Updated lfp info in ' + channel, "lfpInfo", util.logLevel.INFO))
+                .then(() => util.log(`Updated lfp info in <#${channel.id}>`, "lfpInfo", util.logLevel.INFO))
                 .catch(error => util.log(`Failed updating lfp info in ${channel} because ${error}`, "lfpInfo", util.logLevel.ERROR));
         }, 2000);
     }

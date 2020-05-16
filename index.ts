@@ -838,7 +838,7 @@ client.on("message", (message) => {
             ;
 
             channel.send(lfpMsg)
-            .then(() => util.log('Updated lfp info in ' + channel, "lfpInfo", util.logLevel.INFO))
+            .then(() => util.log(`Updated lfp info in <#${channel.id}>`, "lfpInfo", util.logLevel.INFO))
             .catch(error => util.log(`Failed updating lfp info in ${channel} because ${error}`, "lfpInfo", util.logLevel.ERROR));
         }, 2000);
     }
