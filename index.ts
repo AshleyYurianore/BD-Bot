@@ -77,7 +77,7 @@ let emojis: Str_to_Emoji = {
 type LFP_Timer = {
     [key: string]: NodeJS.Timeout
 }
-let lfpTimer: LFP_Timer;
+let lfpTimer: LFP_Timer = {};
 let rpFeedbackTimer: NodeJS.Timeout;
 let lfpChannels: DiscordJS.TextChannel[] = [];
 let rpFeedbackMessage: any;
@@ -508,6 +508,7 @@ client.on("message", (message) => {
                 util.sendTextMessage(channels.main, `There's too much discussion in ${message.channel}...`);
                 mediaTextonlyMessageCounter = 15;
             } else if (mediaTextonlyMessageCounter > 7) {
+                util.sendTempTextMessage(message.channel, `**Please refrain from having a lengthy conversation in the __media__ channel!** Thank you...`);
                 message.delete().catch(console.error);
                 //message.react("💢").catch(console.error);
             }
@@ -1245,7 +1246,7 @@ const cmd: Cmd = {
             return;
         }
         _.each(newcomerMembers, (member, index) => {
-            util.log(" Clearing newcomer role from: " + member + " (" + (index+1) + "/" + newcomerMembers.length + ")", "clearNewcomer", util.logLevel.INFO);
+            util.log(`Clearing newcomer role from: <@${member.id}> (${index+1} / ${newcomerMembers.length} )`, "clearNewcomer", util.logLevel.INFO);
             try {
                 if ((new Date().getTime() - (server.member(member)?.joinedAt?.getTime() || 0))/1000/60 <= 10) { // joined less than 10 minutes ago
                     return;
