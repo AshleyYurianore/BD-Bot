@@ -25,7 +25,7 @@ try {
 }
 catch (e) { }
 const DiscordJS = __importStar(require("discord.js"));
-const client = new DiscordJS.Client();
+const client = new DiscordJS.Client({ partials: ['MESSAGE', 'CHANNEL', 'REACTION'] });
 const _ = require("underscore");
 const moment = require("moment");
 const assert = require("assert");
@@ -312,6 +312,15 @@ client.on('messageReactionAdd', async (messagereaction, user) => {
     if (!(user instanceof DiscordJS.User)) {
         user = await client.users.fetch(user.id);
     }
+    if (messagereaction.partial) {
+        try {
+            await messagereaction.fetch();
+        }
+        catch (e) {
+            util.log(`Failed to fetch reaction ${messagereaction} from ${user} in ${messagereaction.message.channel}`, `messageReactionAdd`, util.logLevel.WARN);
+            return;
+        }
+    }
     const reaction = messagereaction.emoji.name;
     if (messagereaction.emoji instanceof DiscordJS.GuildEmoji)
         return;
@@ -336,32 +345,6 @@ client.on('messageReactionRemove', async (messagereaction, user) => {
         fnct.revokeFeedback(messagereaction.message, user);
     }
 });
-/*
-client.on('raw', packet => {
-    // We don't want this to run on unrelated packets
-    if (!['MESSAGE_REACTION_ADD', 'MESSAGE_REACTION_REMOVE'].includes(packet.t)) return;
-    // Grab the channel to check the message from
-    const channel = client.channels.get(packet.d.channel_id);
-    // There's no need to emit if the message is cached, because the event will fire anyway for that
-    if (channel.messages.has(packet.d.message_id)) return;
-    // Since we have confirmed the message is not cached, let's fetch it
-    channel.fetchMessage(packet.d.message_id).then(message => {
-        // Emojis can have identifiers of name:id format, so we have to account for that case as well
-        const emoji = packet.d.emoji.id ? `${packet.d.emoji.name}:${packet.d.emoji.id}` : packet.d.emoji.name;
-        // This gives us the reaction we need to emit the event properly, in top of the message object
-        const reaction = message.reactions.get(emoji);
-        // Adds the currently reacting user to the reaction's users collection.
-        if (reaction) reaction.users.set(packet.d.user_id, client.users.get(packet.d.user_id));
-        // Check which type of event it is before emitting
-        if (packet.t === 'MESSAGE_REACTION_ADD') {
-            client.emit('messageReactionAdd', reaction, client.users.get(packet.d.user_id));
-        }
-        if (packet.t === 'MESSAGE_REACTION_REMOVE') {
-            // client.emit('messageReactionRemove', reaction, client.users.get(packet.d.user_id));
-        }
-    });
-});
-*/
 client.on("channelUpdate", (oldChannel, newChannel) => {
     if (!(oldChannel instanceof DiscordJS.GuildChannel) || !(newChannel instanceof DiscordJS.GuildChannel)) {
         return;
@@ -1917,11 +1900,17 @@ const util = {
         return ((_b = (_a = message.author.lastMessage) === null || _a === void 0 ? void 0 : _a.member) === null || _b === void 0 ? void 0 : _b.roles.cache.find(role => _.isEqual(role.name, this.roles.STAFF) || _.isEqual(role.name, this.roles.TRIALMOD))) || message.author === AsheN;
     },
     'isUserStaff': function (user) {
-        var _a;
-        const staffRole = server.roles.cache.find(role => role.name === util.roles.STAFF || role.name === util.roles.TRIALMOD);
-        if (!staffRole || !staffRole.id)
-            return;
-        return (((_a = server.roles.cache.get(staffRole.id)) === null || _a === void 0 ? void 0 : _a.members.map(m => m.user).filter(staffMember => _.isEqual(staffMember, user)).length) || 0) > 0;
+        var _a, _b;
+        const staffRole = server.roles.cache.find(role => role.name === util.roles.STAFF);
+        const trialModRole = server.roles.cache.find(role => role.name === util.roles.TRIALMOD);
+        let isStaff = false;
+        if (staffRole && staffRole.id) {
+            isStaff = (((_a = server.roles.cache.get(staffRole.id)) === null || _a === void 0 ? void 0 : _a.members.map(m => m.user).filter(staffMember => _.isEqual(staffMember, user)).length) || 0) > 0;
+        }
+        if (!isStaff && trialModRole && trialModRole.id) {
+            isStaff = (((_b = server.roles.cache.get(trialModRole.id)) === null || _b === void 0 ? void 0 : _b.members.map(m => m.user).filter(staffMember => _.isEqual(staffMember, user)).length) || 0) > 0;
+        }
+        return isStaff;
     },
     'roles': {
         'DONTPING': "DONT PING⛔",
