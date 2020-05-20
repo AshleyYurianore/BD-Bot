@@ -40,8 +40,6 @@ let channels: Str_to_Channel = {
     'char-archive': "📚character-archive",
     'char-index': "📕character-index",
     'reports': "📮reports-and-issues",
-    'rp-fb-entry': "📒rp-feedback-entries",
-    'rp-fb-index': "📒rp-feedback-index",
     'lfp-info': "📌lfp-info",
     'lfp-contact': "💬lfp-contact",
     'lfp-male': "🍆lfp-male",
@@ -78,21 +76,7 @@ type LFP_Timer = {
     [key: string]: NodeJS.Timeout
 }
 let lfpTimer: LFP_Timer = {};
-let rpFeedbackTimer: NodeJS.Timeout;
 let lfpChannels: DiscordJS.TextChannel[] = [];
-let rpFeedbackMessage: any;
-const rpFeedbackTemplate =
-    "`"
-    + "**User to be given a review:** <@UserID>\n"
-    + "\n\n**🔹Grammar/Spelling:**"
-    + "\n\n**🔹Creativity:**"
-    + "\n\n**🔹Leader/Follower of the Story:**"
-    + "\n\n**🔹Time to reply:**"
-    + "\n\n**🔹Matching the length of replies as the partner/as set up:**"
-    + "\n\n**🔹Likelihood to roleplay with again:**"
-    + "\n\n**Additional Notes:**"
-    + "`"
-;
 let AsheN: DiscordJS.User;
 let lockdown = false;
 let disableMentions = true;
@@ -253,17 +237,6 @@ const startUpMod = {
             lfpChannels.push(<DiscordJS.TextChannel>channels["lfp-trans"]);
             lfpChannels.push(<DiscordJS.TextChannel>channels["lfp-vanilla"]);
 
-            (<DiscordJS.TextChannel>channels["rp-fb-entry"]).messages.fetch({ limit: 1 })
-                .then(msg => {
-                    rpFeedbackMessage = msg.first();
-                    if (rpFeedbackMessage) {
-                        rpFeedbackMessage.react('✉️');
-                    }
-                    else {
-                        util.log('Failed finding last feedback entry message', "Feedback", util.logLevel.ERROR);
-                    }
-                });
-
             cmd.cn();
             this.startSchedules();
 
@@ -339,12 +312,6 @@ client.on('messageReactionAdd', async (messagereaction, user) => {
     if (_.isEqual(reaction, "⭐") || _.isEqual(reaction, "✅")) {
         fnct.approveChar(messagereaction.message, messagereaction.emoji, user);
     }
-    if (_.isEqual(reaction, "✉️")) {
-        fnct.addFeedback(messagereaction.message, user);
-    }
-    if (_.isEqual(reaction, "⭐") || _.isEqual(reaction, "✅")) {
-        fnct.approveFeedback(messagereaction.message, messagereaction.emoji, user);
-    }
 });
 
 client.on('messageReactionRemove', async (messagereaction, user) => {
@@ -353,9 +320,6 @@ client.on('messageReactionRemove', async (messagereaction, user) => {
         user = await client.users.fetch(user.id);
     }
     const reaction = messagereaction.emoji.name;
-    if (_.isEqual(reaction, "✉️")) {
-        fnct.revokeFeedback(messagereaction.message, user);
-    }
 });
 
 client.on("channelUpdate", (oldChannel, newChannel) => {
@@ -652,48 +616,6 @@ client.on("message", (message) => {
         }
     }
 
-    if (_.isEqual(message.channel, channels["rp-fb-entry"])) {
-        if (!_.isUndefined(rpFeedbackTimer)) {
-            clearTimeout(rpFeedbackTimer);
-        }
-        rpFeedbackTimer = setTimeout(() => {
-            message.channel.messages.fetch()
-                .then(messages => {
-                    let msg = messages.filter(m => _.isEqual(m.author.id, client.user?.id));
-                    if (msg.size !== 4) {
-                        util.log(`Deleting ${msg.size} of my messages in ${message.channel} which shouldn't happen.`, "rpFeedbackInfo", util.logLevel.WARN);
-                    }
-                    msg.forEach(m => m.delete());
-                });
-
-            let infoMsg =
-                "**__Roleplaying Feedbacks__**\n"
-              + "\nThis channel is for giving __constructive__ feedback on a member you roleplayed with!"
-              + "\nThe RP feedback should serve to help the member to see what they're doing well and what they're doing not "
-              + "well so they can improve on their execution of RPs (if they want to). This should **not** be about "
-              + "criticizing one-liners or people with unorthodox kinks into oblivion, but rather"
-              + " to make sure people get feedback, as well as to let others know what to expect from these RPers."
-              + "\nBelow is a template you can use with criteria you can give feedback on. You can always "
-              + "add more points if you feel the need to, though keep the discord message limit of 2000 characters in mind."
-              + "\n\n__Tip about giving feedbacks:__ Try to construct your feedback like a sandwich and make it more 'digestible'"
-              + " (positive-negative-positive) for the person you're providing feedback for. :)"
-              + "\n\n__Feedback Template:__"
-            ;
-
-            message.channel.send({
-                files: ['https://cdn.discordapp.com/attachments/549695897156583426/693040596276740096/rpfeedback.png']
-            })
-                .then(() => {
-                    message.channel.send(infoMsg);
-                    message.channel.send(rpFeedbackTemplate);
-                    message.channel.send(`_React below to start the process for submitting a feedback! (and remove the reaction to cancel)_`)
-                        .then(msg => {
-                            rpFeedbackMessage = msg;
-                            rpFeedbackMessage.react('✉️');
-                        });
-                });
-        }, 2000);
-    }
 
     // Post the LFP rules in LFP channels
     if (_.contains(lfpChannels, message.channel)) {
@@ -1784,81 +1706,6 @@ const fnct = {
             }
         } catch (e) {
             util.log(e, 'approveCharacter', util.logLevel.ERROR);
-        }
-    },
-    'addFeedback': function(message: DiscordJS.Message, user: DiscordJS.User) {
-        if (_.isEqual(message, rpFeedbackMessage)) {
-            util.log(`${user} has started RP Feedback`, 'addFeedback', util.logLevel.INFO);
-            if (typeof channels["rp-fb-index"] === "string") return;
-            channels["rp-fb-index"].overwritePermissions([{
-                id: user.id,
-                allow: ["VIEW_CHANNEL"]
-            }], 'Add Feedback entry')
-            .then(() => {
-                if (typeof channels["rp-fb-index"] === "string") return;
-                channels["rp-fb-index"].send(
-                    `${user}, please submit your RP Feedback in this channel! It's highly advised ` +
-                    `to use the template below, but whether you use all the fields or add more is ` +
-                    `completely up to you. If you have any questions, feel free to ask right away!`
-                );
-                channels["rp-fb-index"].send(rpFeedbackTemplate);
-            })
-            .catch((err: any) => util.log(err, 'addFeedback', util.logLevel.ERROR));
-        }
-    },
-    'revokeFeedback': function(message: DiscordJS.Message, user: DiscordJS.User) {
-        if (_.isEqual(message, rpFeedbackMessage)) {
-            util.log(`${user} has revoked RP Feedback`, 'revokeFeedback', util.logLevel.INFO);
-            if (typeof channels["rp-fb-index"] === "string") return;
-            channels["rp-fb-index"].overwritePermissions([{
-                id: user.id,
-                deny: ["VIEW_CHANNEL"]
-            }], 'Remove Feedback entry')
-                .then(() => {
-                    if (typeof channels["rp-fb-index"] === "string") return;
-                    channels["rp-fb-index"].messages.fetch()
-                        .then(messages => {
-                            let msg = messages.filter(m => _.isEqual(m.author.id, client.user?.id));
-                            let messagesToDelete: DiscordJS.Message[] = [];
-                            msg.forEach((m, key) => {
-                                if (m.mentions.members?.has(user.id)) {
-                                    messagesToDelete.push(m);
-                                } else if (messagesToDelete.length !== 2) {
-                                    messagesToDelete = [];
-                                    messagesToDelete.push(m);
-                                }
-                            });
-                            _.each(messagesToDelete, m => m.delete());
-                        });
-                })
-                .catch((err: any) => util.log(err, 'revokeFeedback', util.logLevel.ERROR));
-        }
-    },
-    'approveFeedback': function(message: DiscordJS.Message, reaction: DiscordJS.ReactionEmoji, user: DiscordJS.User) {
-        if (_.isEqual(message.channel, channels["rp-fb-index"]) && util.isUserStaff(user)) {
-            if (message.author === client.user) {
-                return;
-            }
-            util.log(`${user} has approved ${message.author}'s RP Feedback`, 'approveFeedback', util.logLevel.INFO);
-            if (typeof channels["rp-fb-index"] === "string") return;
-            channels["rp-fb-index"].overwritePermissions([{
-                id: message.author.id,
-                deny: ["VIEW_CHANNEL"]
-            }], 'Approve Feedback: Remove Feedback index read permissions')
-                .then(() => {
-                    message.channel.messages.fetch()
-                        .then(messages => {
-                            const msg = messages.filter(m => _.isEqual(m.author.id, client.user?.id) && m.createdTimestamp < message.createdTimestamp);
-                            msg.forEach(m => m.delete());
-                        });
-                    const feedback =
-                        (_.isEqual(reaction.name, "⭐") ? `\`` : `\`RP Feedback for: <@UserID>\n`) +
-                        `Writen by: ${message.author}\n\n` +
-                        message.content + `\``
-                    ;
-                    message.channel.send(feedback);
-                })
-                .catch((err: any) => util.log(`${err}`, 'approveFeedback', util.logLevel.ERROR));
         }
     }
 };
