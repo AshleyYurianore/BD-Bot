@@ -1,21 +1,9 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -397,9 +385,9 @@ client.on("message", (message) => {
             message.react('❌')
                 .then() // react success
                 .catch(e => {
-                util.sendTextMessage(channels.main, `HALP, I cannot warn ${message.author} for violating the LFP rules in ${message.channel}! Their ad ${reason}\n` +
-                    `Violating Message Link: ${message.url}\n` +
-                    `Previous Message Link: ${previous_message.message.url}`);
+                util.sendTextMessage(channels.main, new DiscordJS.MessageEmbed().setDescription(`HALP, I cannot warn ${message.author} for violating the LFP rules in ${message.channel}! Their ad ${reason}\n` +
+                    `[Violating Message Link](${message.url})\n` +
+                    `[Previous Message Link](${previous_message.message.url})`));
             });
             warnMsg += `${reason} \nPlease follow the guidelines as described in ${channels["lfp-info"]}. Thanks! :heart:`;
             util.sendTextMessage(channels["lfp-contact"], warnMsg);
@@ -531,14 +519,14 @@ client.on("message", (message) => {
         const no_ping_mentions = message.mentions.members.filter(member => (member.roles.cache.has(dontPingRole.id) && !_.isEqual(member.user, message.author)));
         if (no_ping_mentions.size !== 0) {
             const no_ping_mentions_string = no_ping_mentions.reduce((prev_member, next_member) => prev_member + `${next_member} `, "");
-            const log_message = `${message.author} pinged people with <@&${dontPingRole.id}>:\n${no_ping_mentions_string}\nMessage Link: <${message.url}>`;
+            const log_message = `${message.author} pinged people with <@&${dontPingRole.id}>:\n${no_ping_mentions_string}\n[Message Link](${message.url})`;
             if (!util.isUserStaff(message.author)) { // exclude staff
                 util.log(log_message, "Ping role violation", util.logLevel.INFO);
                 message.react(!_.isNull(ping_violation_reaction_emoji) ? ping_violation_reaction_emoji : '🚫')
                     .catch(error => {
-                    util.log(`Failed reacting to <${message.url}>`, "Ping role violation", util.logLevel.WARN);
-                    util.sendTextMessage(channels.main, `HALP, I'm blocked by ${message.author}!\n` +
-                        `They pinged people with the <@&${dontPingRole.id}> role!\nMessage Link: <${message.url}>`);
+                    util.log(`Failed reacting to [this message](${message.url})`, "Ping role violation", util.logLevel.WARN);
+                    util.sendTextMessage(channels.main, new DiscordJS.MessageEmbed().setDescription(`HALP, I'm blocked by ${message.author}!\n` +
+                        `They pinged people with the <@&${dontPingRole.id}> role!\n[Message Link](${message.url})`));
                 });
             }
         }
@@ -1173,15 +1161,16 @@ const cmd = {
         }
     },
     'clear': function (message, args) {
+        var _a, _b;
         if (!message) {
             return;
         }
         if (util.isStaff(message)) {
-            if (!(args === null || args === void 0 ? void 0 : args[0])) {
+            if (!((_a = args) === null || _a === void 0 ? void 0 : _a[0])) {
                 return;
             }
             const number = parseInt(args[0]);
-            if (args === null || args === void 0 ? void 0 : args[0]) {
+            if ((_b = args) === null || _b === void 0 ? void 0 : _b[0]) {
                 message.channel.messages.fetch({ limit: (number + 1) })
                     .then(messages => {
                     let count = 0;
@@ -1205,6 +1194,7 @@ const cmd = {
         }
         const snowflakes = (message.content.match(/\d+/g) || [message.author.id]).filter(match => match.length > 15);
         snowflakes.forEach(async (snowflake) => {
+            var _a;
             const deconstructed_snowflake = DiscordJS.SnowflakeUtil.deconstruct(snowflake);
             if (deconstructed_snowflake.timestamp === 1420070400000) { //that seems to be the default time when the ID was not found
                 util.sendTextMessage(message.channel, "Unknown ID");
@@ -1217,7 +1207,7 @@ const cmd = {
             }
             else if (server.roles.cache.get(snowflake)) { //a role?
                 const role = server.roles.cache.get(snowflake);
-                if ((role === null || role === void 0 ? void 0 : role.id) === server.id) { //the everyone role ID is the same as the server ID, let's assume they meant the server and not the role
+                if (((_a = role) === null || _a === void 0 ? void 0 : _a.id) === server.id) { //the everyone role ID is the same as the server ID, let's assume they meant the server and not the role
                     target_string = `server **${server.name}**`;
                 }
                 else { //a role that is not the everyone role
@@ -1317,7 +1307,7 @@ const cmd = {
         });
     },
     'slowmode': function (message) {
-        var _a, _b, _c;
+        var _a, _b, _c, _d;
         if (!message) {
             return;
         }
@@ -1330,7 +1320,7 @@ const cmd = {
             return;
         }
         const matches = message.content.match(/\d+/g);
-        if (!(matches === null || matches === void 0 ? void 0 : matches[0])) {
+        if (!((_a = matches) === null || _a === void 0 ? void 0 : _a[0])) {
             util.sendTextMessage(message.channel, `Error: Failed parsing channel. Example usage: \`slowmode #channel 3h 5m 2s\``);
             return;
         }
@@ -1343,9 +1333,9 @@ const cmd = {
             util.sendTextMessage(message.channel, `Error: Cannot set slowmode on non-text channel \`<#${matches[0]}>\``);
             return;
         }
-        const hours = parseInt(((_a = message.content.match(/\d+h/g)) === null || _a === void 0 ? void 0 : _a[0]) || "0");
-        const minutes = parseInt(((_b = message.content.match(/\d+m/g)) === null || _b === void 0 ? void 0 : _b[0]) || "0");
-        const seconds = parseInt(((_c = message.content.match(/\d+s/g)) === null || _c === void 0 ? void 0 : _c[0]) || "0");
+        const hours = parseInt(((_b = message.content.match(/\d+h/g)) === null || _b === void 0 ? void 0 : _b[0]) || "0");
+        const minutes = parseInt(((_c = message.content.match(/\d+m/g)) === null || _c === void 0 ? void 0 : _c[0]) || "0");
+        const seconds = parseInt(((_d = message.content.match(/\d+s/g)) === null || _d === void 0 ? void 0 : _d[0]) || "0");
         const time_s = hours * 60 * 60 + minutes * 60 + seconds;
         const time_str = `${hours}h ${minutes}m ${seconds}s`;
         target_channel.setRateLimitPerUser(time_s, `Set by @${message.author.tag} in #${message.channel.name}`)
@@ -1436,21 +1426,22 @@ const cmd = {
         cmd.checkwarn(message);
     },
     'roles': function (message, args) {
+        var _a, _b, _c;
         if (!message) {
             return;
         }
         if (!util.isStaff(message)) { //the commands are really spammy
             return;
         }
-        if ((args === null || args === void 0 ? void 0 : args.length) === 0) {
+        if (((_a = args) === null || _a === void 0 ? void 0 : _a.length) === 0) {
             util.sendTempTextMessage(message.channel, 'That didn\'t work out... maybe try `_roles who <roleID>` or `_roles usage` or `_roles usage list`');
             return;
         }
-        if ((args === null || args === void 0 ? void 0 : args[0]) === "usage") {
+        if (((_b = args) === null || _b === void 0 ? void 0 : _b[0]) === "usage") {
             args = args.slice(1);
             return cmd["roles usage"](message, args);
         }
-        if ((args === null || args === void 0 ? void 0 : args[0]) === "who") {
+        if (((_c = args) === null || _c === void 0 ? void 0 : _c[0]) === "who") {
             return cmd["roles who"](message);
         }
         util.sendTempTextMessage(message.channel, 'That didn\'t work out... maybe try `_roles who <roleID>` or `_roles usage` or `_roles usage list`');
@@ -1534,7 +1525,8 @@ const cmd = {
         }
     },
     'stop typing': function (message) {
-        message === null || message === void 0 ? void 0 : message.channel.stopTyping(true);
+        var _a;
+        (_a = message) === null || _a === void 0 ? void 0 : _a.channel.stopTyping(true);
     },
     'help': function (message) {
         if (!message) {
@@ -1927,10 +1919,10 @@ const util = {
                 member.roles.remove(outdated_roles, reason)
                     .then(() => {
                     message.react('✅').catch(console.error);
-                    util.log(`Successfully removed ${role_lose_string} from ${user}\nMessage Link: <${message.url}>.`, level_up_module, util.logLevel.INFO);
+                    util.log(`Successfully removed ${role_lose_string} from ${user} [Message Link](${message.url})`, level_up_module, util.logLevel.INFO);
                 })
                     .catch(error => {
-                    util.log(`Failed to remove ${role_lose_string} from ${user}\nMessage Link: <${message.url}>\nError: ${error}`, level_up_module, util.logLevel.ERROR);
+                    util.log(`Failed to remove ${role_lose_string} from ${user} [Message Link](${message.url})\nError: ${error}`, level_up_module, util.logLevel.ERROR);
                 });
             }
         };
@@ -1939,7 +1931,7 @@ const util = {
             member.roles.add(new_role, reason)
                 .then(() => {
                 role_remover();
-                util.log(`Successfully added ${role_gain_string} to ${user}\nMessage Link: <${message.url}>.`, level_up_module, util.logLevel.INFO);
+                util.log(`Successfully added ${role_gain_string} to ${user} [Message Link](${message.url})`, level_up_module, util.logLevel.INFO);
                 if (level === 5) {
                     user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 5` in the Breeding Den Server! You're now able to submit characters and join Voice Channels if you want to!" +
                         "\n\n(_P.S. I'm a bot, so please don't reply!_)");
@@ -1956,7 +1948,7 @@ const util = {
                 }
             })
                 .catch(error => {
-                util.log(`Failed to add ${role_gain_string} to ${user}\nMessage Link: <${message.url}>\nError: ${error}`, level_up_module, util.logLevel.ERROR);
+                util.log(`Failed to add ${role_gain_string} to ${user} [Message Link](${message.url})\nError: ${error}`, level_up_module, util.logLevel.ERROR);
             });
         }
         else {

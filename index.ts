@@ -409,9 +409,9 @@ client.on("message", (message) => {
                 message.react('❌')
                     .then() // react success
                     .catch(e => {
-                        util.sendTextMessage(channels.main, `HALP, I cannot warn ${message.author} for violating the LFP rules in ${message.channel}! Their ad ${reason}\n` +
-                            `Violating Message Link: ${message.url}\n` +
-                            `Previous Message Link: ${previous_message.message.url}`);
+                        util.sendTextMessage(channels.main, new DiscordJS.MessageEmbed().setDescription(`HALP, I cannot warn ${message.author} for violating the LFP rules in ${message.channel}! Their ad ${reason}\n` +
+                            `[Violating Message Link](${message.url})\n` +
+                            `[Previous Message Link](${previous_message.message.url})`));
                     });
 
                 warnMsg += `${reason} \nPlease follow the guidelines as described in ${channels["lfp-info"]}. Thanks! :heart:`;
@@ -547,14 +547,14 @@ client.on("message", (message) => {
         const no_ping_mentions = message.mentions.members.filter(member => (member.roles.cache.has(dontPingRole.id) && !_.isEqual(member.user, message.author)));
         if (no_ping_mentions.size !== 0) {
             const no_ping_mentions_string = no_ping_mentions.reduce((prev_member, next_member) => prev_member + `${next_member} `, "");
-            const log_message = `${message.author} pinged people with <@&${dontPingRole.id}>:\n${no_ping_mentions_string}\nMessage Link: <${message.url}>`;
+            const log_message = `${message.author} pinged people with <@&${dontPingRole.id}>:\n${no_ping_mentions_string}\n[Message Link](${message.url})`;
             if (!util.isUserStaff(message.author)) { // exclude staff
                 util.log(log_message, "Ping role violation", util.logLevel.INFO);
                 message.react(!_.isNull(ping_violation_reaction_emoji) ? ping_violation_reaction_emoji : '🚫')
                     .catch(error => {
-                        util.log(`Failed reacting to <${message.url}>`, "Ping role violation", util.logLevel.WARN);
-                        util.sendTextMessage(channels.main, `HALP, I'm blocked by ${message.author}!\n` +
-                            `They pinged people with the <@&${dontPingRole.id}> role!\nMessage Link: <${message.url}>`);
+                        util.log(`Failed reacting to [this message](${message.url})`, "Ping role violation", util.logLevel.WARN);
+                        util.sendTextMessage(channels.main, new DiscordJS.MessageEmbed().setDescription(`HALP, I'm blocked by ${message.author}!\n` +
+                            `They pinged people with the <@&${dontPingRole.id}> role!\n[Message Link](${message.url})`));
                     });
             }
         }
@@ -1941,10 +1941,10 @@ const util = {
                 member.roles.remove(outdated_roles, reason)
                 .then(() => {
                     message.react('✅').catch(console.error);
-                    util.log(`Successfully removed ${role_lose_string} from ${user}\nMessage Link: <${message.url}>.`, level_up_module, util.logLevel.INFO);
+                    util.log(`Successfully removed ${role_lose_string} from ${user} [Message Link](${message.url})`, level_up_module, util.logLevel.INFO);
                 })
                 .catch(error => {
-                    util.log(`Failed to remove ${role_lose_string} from ${user}\nMessage Link: <${message.url}>\nError: ${error}`, level_up_module, util.logLevel.ERROR);
+                    util.log(`Failed to remove ${role_lose_string} from ${user} [Message Link](${message.url})\nError: ${error}`, level_up_module, util.logLevel.ERROR);
                 });
             }
         };
@@ -1953,7 +1953,7 @@ const util = {
             member.roles.add(new_role, reason)
             .then(() => {
                 role_remover();
-                util.log(`Successfully added ${role_gain_string} to ${user}\nMessage Link: <${message.url}>.`, level_up_module, util.logLevel.INFO);
+                util.log(`Successfully added ${role_gain_string} to ${user} [Message Link](${message.url})`, level_up_module, util.logLevel.INFO);
                 if (level === 5) {
                     user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 5` in the Breeding Den Server! You're now able to submit characters and join Voice Channels if you want to!" +
                         "\n\n(_P.S. I'm a bot, so please don't reply!_)");
@@ -1968,7 +1968,7 @@ const util = {
                 }
             })
             .catch(error => {
-                util.log(`Failed to add ${role_gain_string} to ${user}\nMessage Link: <${message.url}>\nError: ${error}`, level_up_module, util.logLevel.ERROR);
+                util.log(`Failed to add ${role_gain_string} to ${user} [Message Link](${message.url})\nError: ${error}`, level_up_module, util.logLevel.ERROR);
             });
         }
         else {
