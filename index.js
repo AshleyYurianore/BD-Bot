@@ -1890,70 +1890,39 @@ const util = {
         }
         return result;
     },
-    'handle_level_up': function (message) {
-        var _a, _b, _c;
-        const member = (_a = message.mentions.members) === null || _a === void 0 ? void 0 : _a.first();
+    'handle_level_up': async function (message) {
+        var _a, _b, _c, _d;
+        const member = await ((_b = (_a = message.mentions.members) === null || _a === void 0 ? void 0 : _a.first()) === null || _b === void 0 ? void 0 : _b.fetch());
         if (!member)
             return;
         const user = member.user;
-        const level_string = (_b = message.content.match(/level \d+/g)) === null || _b === void 0 ? void 0 : _b[0];
+        const level_string = (_c = message.content.match(/level \d+/g)) === null || _c === void 0 ? void 0 : _c[0];
         if (!level_string)
             return;
-        const level = parseInt(((_c = level_string.match(/\d+/g)) === null || _c === void 0 ? void 0 : _c[0]) || "");
+        const level = parseInt(((_d = level_string.match(/\d+/g)) === null || _d === void 0 ? void 0 : _d[0]) || "");
         const new_role = util.level_to_role(level);
-        const old_roles = member.roles.cache.filter(role => _.contains(util.roles.LVL, role));
-        let role_gain_string = "";
-        if (!old_roles.find(role => role == new_role)) {
-            role_gain_string = `${new_role}`;
+        const updated_roles = member.roles.cache.filter(role => !_.contains(util.roles.LVL, role)).set(new_role.id, new_role);
+        const added_roles = updated_roles.filter(role => !member.roles.cache.has(role.id));
+        const removed_roles = member.roles.cache.filter(role => !updated_roles.has(role.id));
+        if (added_roles.size === 0 && removed_roles.size === 0)
+            return;
+        const role_gain_string = added_roles.reduce((curr, role) => curr + `${role}`, "");
+        const role_lose_string = removed_roles.reduce((curr, role) => curr + `${role}`, "");
+        util.log(`${user} gained level ${level}, so added [${role_gain_string}] and removed [${role_lose_string}]`, level_up_module, util.logLevel.INFO);
+        await member.roles.set(updated_roles);
+        if (level === 5) {
+            user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 5` in the Breeding Den Server! You're now able to submit characters and join Voice Channels if you want to!" +
+                "\n\n(_P.S. I'm a bot, so please don't reply!_)");
         }
-        const outdated_roles = old_roles.filter(role => role != new_role);
-        let role_lose_string = "";
-        if (outdated_roles.size > 0) {
-            const outdated_roles_string = outdated_roles.reduce((current, next) => current + `${next}`, "");
-            role_lose_string = `${outdated_roles_string}`;
+        else if (level === 20) {
+            user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 20` in the Breeding Den Server! You've unlocked the <#560869811157073920> " +
+                "and you're able to create your own cult, as long as certain criterias are met too!" +
+                "For more detailed information, please check out the very top message in <#538901164897337347>" +
+                "\nIf you're interested, simply ask a Staff member and they will guide you through the process!\n\n(_P.S. I'm a bot, so please don't reply!_)");
         }
-        const reason = `${user.username} gained level ${level}`;
-        //Note: Need to be careful to add first and then remove, otherwise Yag adds the lvl0 role
-        const role_remover = () => {
-            if (role_lose_string) {
-                member.roles.remove(outdated_roles, reason)
-                    .then(() => {
-                    message.react('✅').catch(console.error);
-                    util.log(`Successfully removed ${role_lose_string} from ${user} [Message Link](${message.url})`, level_up_module, util.logLevel.INFO);
-                })
-                    .catch(error => {
-                    util.log(`Failed to remove ${role_lose_string} from ${user} [Message Link](${message.url})\nError: ${error}`, level_up_module, util.logLevel.ERROR);
-                });
-            }
-        };
-        // add role
-        if (role_gain_string) {
-            member.roles.add(new_role, reason)
-                .then(() => {
-                role_remover();
-                util.log(`Successfully added ${role_gain_string} to ${user} [Message Link](${message.url})`, level_up_module, util.logLevel.INFO);
-                if (level === 5) {
-                    user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 5` in the Breeding Den Server! You're now able to submit characters and join Voice Channels if you want to!" +
-                        "\n\n(_P.S. I'm a bot, so please don't reply!_)");
-                }
-                else if (level === 20) {
-                    user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 20` in the Breeding Den Server! You've unlocked the <#560869811157073920> " +
-                        "and you're able to create your own cult, as long as certain criterias are met too!" +
-                        "For more detailed information, please check out the very top message in <#538901164897337347>" +
-                        "\nIf you're interested, simply ask a Staff member and they will guide you through the process!\n\n(_P.S. I'm a bot, so please don't reply!_)");
-                }
-                else if (level === 30) {
-                    user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 30` in the Breeding Den Server! You're now able to get yourself a __Custom Role__ if you want to!" +
-                        "\nSimply ask a Staff member and tell them the __Name__ and __Color__ (ideally in Hexcode) of the Custom role!\n\n(_P.S. I'm a bot, so please don't reply!_)");
-                }
-            })
-                .catch(error => {
-                util.log(`Failed to add ${role_gain_string} to ${user} [Message Link](${message.url})\nError: ${error}`, level_up_module, util.logLevel.ERROR);
-            });
-        }
-        else {
-            // remove role
-            role_remover();
+        else if (level === 30) {
+            user.send("__**Congratulations!**__ :tada:\n\nYou have reached `Level 30` in the Breeding Den Server! You're now able to get yourself a __Custom Role__ if you want to!" +
+                "\nSimply ask a Staff member and tell them the __Name__ and __Color__ (ideally in Hexcode) of the Custom role!\n\n(_P.S. I'm a bot, so please don't reply!_)");
         }
     },
     'time': function (time_ms) {
