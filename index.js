@@ -1,9 +1,21 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -1214,16 +1226,15 @@ const cmd = {
         }
     },
     'clear': function (message, args) {
-        var _a, _b;
         if (!message) {
             return;
         }
         if (util.isStaff(message)) {
-            if (!((_a = args) === null || _a === void 0 ? void 0 : _a[0])) {
+            if (!(args === null || args === void 0 ? void 0 : args[0])) {
                 return;
             }
             const number = parseInt(args[0]);
-            if ((_b = args) === null || _b === void 0 ? void 0 : _b[0]) {
+            if (args === null || args === void 0 ? void 0 : args[0]) {
                 message.channel.messages.fetch({ limit: (number + 1) })
                     .then(messages => {
                     let count = 0;
@@ -1247,7 +1258,6 @@ const cmd = {
         }
         const snowflakes = (message.content.match(/\d+/g) || [message.author.id]).filter(match => match.length > 15);
         snowflakes.forEach(async (snowflake) => {
-            var _a;
             const deconstructed_snowflake = DiscordJS.SnowflakeUtil.deconstruct(snowflake);
             if (deconstructed_snowflake.timestamp === 1420070400000) { //that seems to be the default time when the ID was not found
                 util.sendTextMessage(message.channel, "Unknown ID");
@@ -1260,7 +1270,7 @@ const cmd = {
             }
             else if (server.roles.cache.get(snowflake)) { //a role?
                 const role = server.roles.cache.get(snowflake);
-                if (((_a = role) === null || _a === void 0 ? void 0 : _a.id) === server.id) { //the everyone role ID is the same as the server ID, let's assume they meant the server and not the role
+                if ((role === null || role === void 0 ? void 0 : role.id) === server.id) { //the everyone role ID is the same as the server ID, let's assume they meant the server and not the role
                     target_string = `server **${server.name}**`;
                 }
                 else { //a role that is not the everyone role
@@ -1356,7 +1366,7 @@ const cmd = {
         });
     },
     'slowmode': function (message) {
-        var _a, _b, _c, _d;
+        var _a, _b, _c;
         if (!message) {
             return;
         }
@@ -1369,7 +1379,7 @@ const cmd = {
             return;
         }
         const matches = message.content.match(/\d+/g);
-        if (!((_a = matches) === null || _a === void 0 ? void 0 : _a[0])) {
+        if (!(matches === null || matches === void 0 ? void 0 : matches[0])) {
             util.sendTextMessage(message.channel, `Error: Failed parsing channel. Example usage: \`slowmode #channel 3h 5m 2s\``);
             return;
         }
@@ -1382,9 +1392,9 @@ const cmd = {
             util.sendTextMessage(message.channel, `Error: Cannot set slowmode on non-text channel \`<#${matches[0]}>\``);
             return;
         }
-        const hours = parseInt(((_b = message.content.match(/\d+h/g)) === null || _b === void 0 ? void 0 : _b[0]) || "0");
-        const minutes = parseInt(((_c = message.content.match(/\d+m/g)) === null || _c === void 0 ? void 0 : _c[0]) || "0");
-        const seconds = parseInt(((_d = message.content.match(/\d+s/g)) === null || _d === void 0 ? void 0 : _d[0]) || "0");
+        const hours = parseInt(((_a = message.content.match(/\d+h/g)) === null || _a === void 0 ? void 0 : _a[0]) || "0");
+        const minutes = parseInt(((_b = message.content.match(/\d+m/g)) === null || _b === void 0 ? void 0 : _b[0]) || "0");
+        const seconds = parseInt(((_c = message.content.match(/\d+s/g)) === null || _c === void 0 ? void 0 : _c[0]) || "0");
         const time_s = hours * 60 * 60 + minutes * 60 + seconds;
         const time_str = `${hours}h ${minutes}m ${seconds}s`;
         target_channel.setRateLimitPerUser(time_s, `Set by @${message.author.tag} in #${message.channel.name}`)
@@ -1475,22 +1485,21 @@ const cmd = {
         cmd.checkwarn(message);
     },
     'roles': function (message, args) {
-        var _a, _b, _c;
         if (!message) {
             return;
         }
         if (!util.isStaff(message)) { //the commands are really spammy
             return;
         }
-        if (((_a = args) === null || _a === void 0 ? void 0 : _a.length) === 0) {
+        if ((args === null || args === void 0 ? void 0 : args.length) === 0) {
             util.sendTempTextMessage(message.channel, 'That didn\'t work out... maybe try `_roles who <roleID>` or `_roles usage` or `_roles usage list`');
             return;
         }
-        if (((_b = args) === null || _b === void 0 ? void 0 : _b[0]) === "usage") {
+        if ((args === null || args === void 0 ? void 0 : args[0]) === "usage") {
             args = args.slice(1);
             return cmd["roles usage"](message, args);
         }
-        if (((_c = args) === null || _c === void 0 ? void 0 : _c[0]) === "who") {
+        if ((args === null || args === void 0 ? void 0 : args[0]) === "who") {
             return cmd["roles who"](message);
         }
         util.sendTempTextMessage(message.channel, 'That didn\'t work out... maybe try `_roles who <roleID>` or `_roles usage` or `_roles usage list`');
@@ -1574,8 +1583,7 @@ const cmd = {
         }
     },
     'stop typing': function (message) {
-        var _a;
-        (_a = message) === null || _a === void 0 ? void 0 : _a.channel.stopTyping(true);
+        message === null || message === void 0 ? void 0 : message.channel.stopTyping(true);
     },
     'help': function (message) {
         if (!message) {
