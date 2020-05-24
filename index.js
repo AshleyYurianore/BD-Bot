@@ -16,7 +16,6 @@ const DiscordJS = __importStar(require("discord.js"));
 const client = new DiscordJS.Client({ partials: ['MESSAGE', 'CHANNEL', 'REACTION'] });
 const _ = require("underscore");
 const moment = require("moment");
-const assert = require("assert");
 const schedule = require("node-schedule");
 const debug = false;
 const MongoClient = require('mongodb').MongoClient;
@@ -784,112 +783,167 @@ const get_permission_diff_string = (old_permissions, new_permissions) => {
     }
     return result;
 };
+const id_to_string = (id) => {
+    var _a;
+    //Figure out the origin of the ID
+    if (client.users.cache.get(id)) { //a user?
+        return `<@${id}>`;
+    }
+    else if (server.roles.cache.get(id)) { //a role?
+        if (id === ((_a = server.roles.everyone) === null || _a === void 0 ? void 0 : _a.id)) {
+            return `@everyone`;
+        }
+        return `<@&${id}>`;
+    }
+    else if (server.channels.cache.get(id)) { //a channel?
+        return `<#${id}>`;
+    }
+    else if (server.emojis.cache.get(id)) { //an emoji?
+        return `${server.emojis.cache.get(id)}`;
+    }
+    else { //ok I give up
+        return id;
+    }
+};
+const to_string = (thing) => {
+    if (thing instanceof Array) {
+        let result = "[";
+        for (const key in thing) {
+            result += to_string(thing[key]) + ", ";
+        }
+        result = result.slice(0, -2);
+        result += "]";
+        return result;
+    }
+    else if (thing instanceof Object) {
+        if ("id" in thing) {
+            return id_to_string(thing.id);
+        }
+        let result = "{";
+        Object.entries(thing).forEach(([key, value]) => {
+            if (key === "id") {
+                result += `${id_to_string(value)}`;
+            }
+            else if (key === "name") {
+                result += `${value}`;
+            }
+            else if (key === "color") {
+                result += `color: #${value.toString(16)}`;
+            }
+            else {
+                result += `${key}: ${to_string(value)}`;
+            }
+            result += ", ";
+        });
+        result = result.slice(0, -2);
+        result += "}";
+        return result;
+    }
+    else if (typeof thing === "string") {
+        return `"${thing}"`;
+    }
+    else if (typeof thing === "number") {
+        return `${thing}`;
+    }
+    else if (typeof thing === "boolean") {
+        return thing ? "true" : "false";
+    }
+    else {
+        return `**Error: Unhandled object type ${typeof thing}**`;
+    }
+};
 const audit_changes_to_string = (changes) => {
     if (changes === null) {
         return "";
     }
-    return _.reduce(changes, (curr, change) => {
-        curr += change.key ? `${change.key}: ` : "";
-        if (change.key === "permissions") {
-            curr += `${get_permission_diff_string(change.old, change.new)}`;
+    return changes.reduce((current, change) => {
+        let curr = ", ";
+        let change_key = change.key ? `${change.key}: ` : "";
+        if (change.key === "$add") {
+            change_key = "added ";
+        }
+        if (change.key === "$remove") {
+            change_key = "removed ";
+        }
+        if (change.key === "permissions" || change.key === "deny" || change.key === "allow") {
+            curr += `${change_key}${get_permission_diff_string(change.old, change.new)}`;
         }
         else if (change.key === "color") {
-            curr += `#${change.old.toString(16)}->#${change.new.toString(16)}`;
+            curr += `${change_key}#${change.old.toString(16)}➔#${change.new.toString(16)}`;
+        }
+        else if (change.key === "rate_limit_per_user") {
+            curr += `slowmode: ${change.old}s➔${change.new}s`;
         }
         else {
-            curr += change.old === null ? "" : `${change.old}`;
-            curr += (change.old !== null && change.new !== null) ? "->" : "";
-            curr += change.new === null ? "" : `${change.new}`;
+            curr += change_key;
+            curr += change.old !== undefined ? to_string(change.old) : "";
+            curr += (change.old !== undefined && change.new !== undefined) ? "➔" : "";
+            curr += change.new !== undefined ? to_string(change.new) : "";
         }
-        return curr + " ";
-    }, "");
+        return curr + current;
+    }, "").slice(2);
 };
 const audits_to_string = (audits, snowflake) => {
-    return "";
-    /*
     return audits.entries.reduce((current, audit) => {
+        var _a;
         if (audit.target instanceof DiscordJS.Invite) { //can't audit invites because invites don't have an ID
             return current;
         }
-        if (audit.target?.id != snowflake) { //not an entry where something was done to the target
+        if (((_a = audit.target) === null || _a === void 0 ? void 0 : _a.id) != snowflake) { //not an entry where something was done to the target
             return current;
         }
-        current += `**${util.time(new Date().getTime() - audit.createdAt.getTime())} ago:** `;
+        let curr = `**${util.time(new Date().getTime() - audit.createdAt.getTime())} ago:** `;
         if (audit.action === "MEMBER_ROLE_UPDATE") {
-            const action = audit.changes?.[0].key === "$add" ? "added" : "removed";
-            current += `${audit.executor} ${action} role ${server.roles.cache.has(audit.changes[0].new[0].id) ? `<@&${audit.changes[0].new[0].id}>` : audit.changes[0].new[0].name}`;
+            curr += `${audit.executor} ${audit_changes_to_string(audit.changes)}`;
         }
         else if (audit.action === "MEMBER_UPDATE") {
-            current += `${audit.executor} changed nickname from ${audit.changes[0].old || "none"} to ${audit.changes[0].new || "none"}`;
+            curr += `${audit.executor} changed nickname: ${audit_changes_to_string(audit.changes)}`;
         }
         else if (audit.action === "MEMBER_KICK") {
-            current += `Was kicked by ${audit.executor}`;
+            curr += `Was kicked by ${audit.executor}`;
         }
         else if (audit.action === "CHANNEL_CREATE") {
-            current += `Was created by ${audit.executor}`;
+            curr += `Was created by ${audit.executor}`;
         }
         else if (audit.action === "CHANNEL_OVERWRITE_UPDATE") {
-            current += `Permissions updated by ${audit.executor}: ${get_permission_diff_string(audit.changes[0].old, audit.changes[0].new)}`;
+            curr += `Permissions updated by ${audit.executor}: ${audit_changes_to_string(audit.changes)}`;
         }
         else if (audit.action === "CHANNEL_UPDATE") {
-            current += `${audit.executor} updated ${audit_changes_to_string(audit.changes)}`;
+            curr += `${audit.executor} updated ${audit_changes_to_string(audit.changes)}`;
         }
         else if (audit.action === "ROLE_UPDATE") {
-            current += `${audit.executor} ${audit_changes_to_string(audit.changes)}`;
+            curr += `${audit.executor} ${audit_changes_to_string(audit.changes)}`;
         }
         else if (audit.action === "EMOJI_CREATE") {
-            current += `${audit.executor} created emoji. ${audit_changes_to_string(audit.changes)}`;
+            curr += `${audit.executor} created emoji. ${audit_changes_to_string(audit.changes)}`;
         }
         else if (audit.action === "GUILD_UPDATE") {
-            current += `${audit.executor} updated server ${audit_changes_to_string(audit.changes)}`;
+            curr += `${audit.executor} updated server ${audit_changes_to_string(audit.changes)}`;
         }
         else if (audit.action === "MEMBER_BAN_ADD") {
-            current += `Banned by ${audit.executor}`;
+            curr += `Banned by ${audit.executor}`;
         }
         else if (audit.action === "MEMBER_BAN_REMOVE") {
-            current += `Unbanned by ${audit.executor}`;
+            curr += `Unbanned by ${audit.executor}`;
         }
         else {
-            current += `${audit.executor} performed `;
-            current += `__Action__: ${audit.action} `;
+            curr += `${audit.executor} ${audit.action}`;
             if (audit.changes) {
-                current += `__Changes__: `;
-                current += audit_changes_to_string(audit.changes);
+                curr += ` changes: `;
+                curr += audit_changes_to_string(audit.changes);
             }
-            if (audit.extra) {
-                if (audit.changes) {
-                    current += " ";
-                }
-                current += `__Extra__: `;
-                if ("setMentionable" in audit.extra || "kick" in audit.extra) {
-                    //the extra is a role or a member
-                    current += `${audit.extra}`;
-                }
-                else {
-                    //the extra is an object
-                    current += `{${_.reduce(Object.keys(audit.extra),
-                        (current, key) => current + `${key}: ${audit.extra[key]} `, "")}}`;
-                }
+            else {
+                curr += " ";
             }
         }
         if (audit.extra) {
-            current += `__Extra__: `;
-            if (audit.extra.setMentionable || audit.extra.kick) {
-                //the extra is a role or a member
-                current += `${audit.extra}`;
-            }
-            else {
-                //the extra is an object
-                current += `{${_.reduce(Object.keys(audit.extra),
-                    (current, key) => current + `${key}: ${audit.extra[key]} `, "")}} `;
-            }
+            curr += " extras: " + to_string(audit.extra);
         }
         if (audit.reason) {
-            current += ` because ${audit.reason}`;
+            curr += ` because ${audit.reason}`;
         }
-        return current + "\n";
+        return curr + "\n" + current;
     }, "");
-    */
 };
 const audit_send_result = (target_string, string, channel) => {
     const result_string = `**Audit for ${target_string}**:\n` + string;
@@ -902,21 +956,20 @@ const audit_send_result = (target_string, string, channel) => {
     });
 };
 const audit_log_search = (target_string, message, snowflake, result_string = "", latest_entry, counter = 0) => {
-    if (!latest_entry) {
+    const counter_limit = 50; //How many sets of 100 audit logs will be requested from Discord. Increasing the number usually gives more results and also makes it slower.
+    const character_limit = 1500; //How long the result message must be before we consider it enough to avoid the command to be too spammy. The limit can be raised past 2000 in which case multiple messages will be posted.
+    if (counter === 0) {
         message.channel.startTyping();
     }
-    //DiscordJS.GuildAuditLogsFetchOptions;
     server.fetchAuditLogs(latest_entry ? { limit: 100, before: latest_entry } : { limit: 100 })
         .then(audits => {
-        const new_results = audits_to_string(audits, snowflake);
-        result_string += new_results;
-        if (result_string.length > 1500 || audits.entries.size < 100 || counter > 100) {
+        result_string = audits_to_string(audits, snowflake) + result_string;
+        if (result_string.length > character_limit || audits.entries.size < 100 || counter > counter_limit) {
             audit_send_result(target_string, result_string, message.channel);
             message.channel.stopTyping();
         }
         else {
-            assert(audits.entries.lastKey());
-            audit_log_search(target_string, message, snowflake, result_string, audits.entries.lastKey(), counter + 1 || 1);
+            audit_log_search(target_string, message, snowflake, result_string, audits.entries.lastKey(), counter + 1);
         }
     }).catch(error => {
         message.channel.send(new DiscordJS.MessageEmbed()
@@ -1267,10 +1320,6 @@ const cmd = {
         if (!message) {
             return;
         }
-        util.sendTextMessage(message.channel, "Sorry, currently broken because TS is a bitch");
-        let b = true;
-        if (b)
-            return;
         if (!util.isStaff(message)) {
             util.sendTextMessage(message.channel, `${message.author} You audition for a porn movie where you get used like a slut.\n` +
                 `The audition video sells well, but you never hear from them again.`);
